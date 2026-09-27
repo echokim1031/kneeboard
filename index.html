@@ -322,18 +322,68 @@
         </section>
 
         <!-- 4) REMAINING FUEL CALC SECTION -->
-        <section id="sec-fuel" class="hidden">
-            <div class="bg-slate-900 border border-slate-800 rounded-lg p-2 text-center text-slate-400 py-6">
-                <span class="text-amber-400 font-bold block mb-1">REMAINING FUEL CALC</span>
-                [Custom fuel formulas & inputs will be populated here]
+        <section id="sec-fuel" class="hidden space-y-1-5">
+            <div class="bg-slate-900 border border-slate-800 rounded-lg p-2 space-y-1-5">
+                <div class="text-10 font-bold text-amber-400 uppercase tracking-wider border-b border-slate-800 pb-1 mb-1-5">
+                    FUEL CHECK & DIFFERENCE CALC
+                </div>
+                
+                <!-- R/O FUEL -->
+                <div class="flex items-center justify-between">
+                    <span class="text-slate-400 text-10 font-bold shrink-0" style="width: 95px;">R/O FUEL:</span>
+                    <div id="fuel-ro" onclick="setActiveInput('fuel-ro', 'num')" class="kb-input bg-slate-950 border border-slate-700 rounded px-2 text-amber-400 font-bold flex-1 ml-2 text-right"></div>
+                </div>
+
+                <!-- FUEL USED -->
+                <div class="flex items-center justify-between">
+                    <span class="text-slate-400 text-10 font-bold shrink-0" style="width: 95px;">FUEL USED:</span>
+                    <div id="fuel-used" onclick="setActiveInput('fuel-used', 'num')" class="kb-input bg-slate-950 border border-slate-700 rounded px-2 text-cyan-400 font-bold flex-1 ml-2 text-right"></div>
+                </div>
+
+                <!-- REMAINING FUEL (ACTUAL) -->
+                <div class="flex items-center justify-between">
+                    <span class="text-slate-400 text-10 font-bold shrink-0" style="width: 95px;">REMAINING:</span>
+                    <div id="fuel-act" onclick="setActiveInput('fuel-act', 'num')" class="kb-input bg-slate-950 border border-slate-700 rounded px-2 text-emerald-400 font-bold flex-1 ml-2 text-right"></div>
+                </div>
+
+                <!-- CALCULATED RESULT (DIFFERENCE) -->
+                <div class="border-t border-slate-800 pt-1-5 mt-2 flex items-center justify-between">
+                    <span class="text-slate-300 text-10 font-bold shrink-0" style="width: 95px;">DIFF (ACT/PLN):</span>
+                    <span id="fuel-diff" class="text-base font-bold text-slate-100 px-2 text-right flex-1">---</span>
+                </div>
             </div>
         </section>
 
         <!-- 5) JETT' CALC SECTION -->
-        <section id="sec-jett" class="hidden">
-            <div class="bg-slate-900 border border-slate-800 rounded-lg p-2 text-center text-slate-400 py-6">
-                <span class="text-red-300 font-bold block mb-1">JETTISON CALC</span>
-                [Jettison rate, GW, MLW, time calculations will be populated here]
+        <section id="sec-jett" class="hidden space-y-1-5">
+            <div class="bg-slate-900 border border-slate-800 rounded-lg p-2 space-y-1-5">
+                <div class="text-10 font-bold text-amber-400 uppercase tracking-wider border-b border-slate-800 pb-1 mb-1-5">
+                    JETTISON FUEL CALC
+                </div>
+                
+                <!-- FOB -->
+                <div class="flex items-center justify-between">
+                    <span class="text-slate-400 text-10 font-bold shrink-0" style="width: 95px;">FOB:</span>
+                    <div id="jett-fob" onclick="setActiveInput('jett-fob', 'num')" class="kb-input bg-slate-950 border border-slate-700 rounded px-2 text-amber-400 font-bold flex-1 ml-2 text-right"></div>
+                </div>
+
+                <!-- SUM OF FEED TK -->
+                <div class="flex items-center justify-between">
+                    <span class="text-slate-400 text-10 font-bold shrink-0" style="width: 95px;">FEED TK:</span>
+                    <div id="jett-feed-tk" onclick="setJettDefaultInput('jett-feed-tk', '190000')" class="kb-input bg-slate-950 border border-slate-700 rounded px-2 text-cyan-400 font-bold flex-1 ml-2 text-right">190000</div>
+                </div>
+
+                <!-- EXP LB -->
+                <div class="flex items-center justify-between">
+                    <span class="text-slate-400 text-10 font-bold shrink-0" style="width: 95px;">EXP LB:</span>
+                    <span id="jett-exp" class="text-base font-bold text-slate-100 px-2 text-right flex-1">---</span>
+                </div>
+
+                <!-- MIN -->
+                <div class="border-t border-slate-800 pt-1-5 mt-2 flex items-center justify-between">
+                    <span class="text-slate-300 text-10 font-bold shrink-0" style="width: 95px;">MIN:</span>
+                    <span id="jett-min" class="text-base font-bold text-emerald-400 px-2 text-right flex-1">---</span>
+                </div>
             </div>
         </section>
 
@@ -485,6 +535,9 @@
 
         // Tab Section Switcher
         function switchSection(sec) {
+            // Check if leaving JETT section to restore default FEED TK if empty
+            checkJettBlur();
+
             currentSection = sec;
             const sections = ['crew', 'inop', 'chk', 'fuel', 'jett'];
             
@@ -504,6 +557,8 @@
             // Set default input focus per section
             if (sec === 'crew') setActiveInput('crew-emp-1', 'num');
             if (sec === 'inop') setActiveInput('inop-dep-1', 'alpha');
+            if (sec === 'fuel') setActiveInput('fuel-ro', 'num');
+            if (sec === 'jett') setActiveInput('jett-fob', 'num');
             if (sec === 'chk') {
                 document.querySelectorAll('.kb-input').forEach(el => el.classList.remove('input-active'));
                 activeInputId = '';
@@ -527,6 +582,11 @@
 
         // Set Active Field & Preferred Keypad Mode
         function setActiveInput(id, preferredMode = 'alpha') {
+            // Check Jett default blur behavior when moving away from jett-feed-tk
+            if (activeInputId === 'jett-feed-tk' && id !== 'jett-feed-tk') {
+                checkJettBlur();
+            }
+
             document.querySelectorAll('.kb-input').forEach(el => el.classList.remove('input-active'));
             const target = document.getElementById(id);
             if (!target) return;
@@ -536,6 +596,24 @@
 
             document.getElementById('active-field-label').innerText = id.toUpperCase().replace(/-/g, ' ');
             switchKeypad(preferredMode);
+        }
+
+        // Jett specific input click handler (Clears 190000 on focus)
+        function setJettDefaultInput(id, defaultValue) {
+            setActiveInput(id, 'num');
+            const el = document.getElementById(id);
+            if (el.innerText.trim() === defaultValue) {
+                el.innerText = '';
+            }
+        }
+
+        // Check if FEED TK is empty when losing focus, and restore default 190000
+        function checkJettBlur() {
+            const feedTkEl = document.getElementById('jett-feed-tk');
+            if (feedTkEl && feedTkEl.innerText.trim() === '') {
+                feedTkEl.innerText = '190000';
+                calculateJett();
+            }
         }
 
         // Toggle NUM and ALPHA Keypads
@@ -559,7 +637,7 @@
             }
         }
 
-        // Key Press Handler
+        // Key Press Handler & Calculation Triggers
         function pressKey(key) {
             if (!activeInputId) return;
             const target = document.getElementById(activeInputId);
@@ -577,6 +655,72 @@
                 focusNextInput();
             } else {
                 target.innerText = val + key;
+            }
+
+            // Real-time calculation hooks
+            if (activeInputId.startsWith('fuel-')) {
+                calculateFuelDifference();
+            } else if (activeInputId.startsWith('jett-')) {
+                calculateJett();
+            }
+        }
+
+        // Fuel Difference Calculation Formula
+        function calculateFuelDifference() {
+            const ro = parseFloat(document.getElementById('fuel-ro').innerText) || 0;
+            const used = parseFloat(document.getElementById('fuel-used').innerText) || 0;
+            const act = parseFloat(document.getElementById('fuel-act').innerText) || 0;
+            
+            const diffEl = document.getElementById('fuel-diff');
+
+            if (document.getElementById('fuel-ro').innerText === '' || document.getElementById('fuel-used').innerText === '' || document.getElementById('fuel-act').innerText === '') {
+                diffEl.innerText = '---';
+                diffEl.className = "text-base font-bold text-slate-100 px-2 text-right flex-1";
+                return;
+            }
+
+            const planRemaining = ro - used;
+            const diff = act - planRemaining;
+
+            const sign = diff > 0 ? '+' : '';
+            diffEl.innerText = `${sign}${diff.toFixed(1)}`;
+
+            if (diff > 0) {
+                diffEl.className = "text-base font-bold text-emerald-400 px-2 text-right flex-1";
+            } else if (diff < 0) {
+                diffEl.className = "text-base font-bold text-red-300 px-2 text-right flex-1";
+            } else {
+                diffEl.className = "text-base font-bold text-slate-100 px-2 text-right flex-1";
+            }
+        }
+
+        // Jettison Fuel Calculation Formula
+        function calculateJett() {
+            const fobText = document.getElementById('jett-fob').innerText.trim();
+            const feedTkText = document.getElementById('jett-feed-tk').innerText.trim() || '190000';
+
+            const fob = parseFloat(fobText);
+            const feedTk = parseFloat(feedTkText);
+
+            const expEl = document.getElementById('jett-exp');
+            const minEl = document.getElementById('jett-min');
+
+            if (isNaN(fob)) {
+                expEl.innerText = '---';
+                minEl.innerText = '---';
+                return;
+            }
+
+            // EXP LB = FOB - SUM OF FEED TK
+            const exp = fob - feedTk;
+            expEl.innerText = exp;
+
+            // MIN = CEIL(EXP LB / 5500)
+            if (exp <= 0) {
+                minEl.innerText = '0';
+            } else {
+                const minVal = Math.ceil(exp / 5500);
+                minEl.innerText = minVal.toLocaleString();
             }
         }
 
@@ -606,17 +750,34 @@
                 } else if (loc === 'dep') {
                     setActiveInput('inop-dest-1', 'alpha');
                 }
+            } else if (currentSection === 'fuel') {
+                if (activeInputId === 'fuel-ro') setActiveInput('fuel-used', 'num');
+                else if (activeInputId === 'fuel-used') setActiveInput('fuel-act', 'num');
+            } else if (currentSection === 'jett') {
+                if (activeInputId === 'jett-fob') setActiveInput('jett-feed-tk', 'num');
             }
         }
 
         // Clear Current Section Inputs
         function clearCurrentSection() {
-            if (currentSection === 'crew' || currentSection === 'inop') {
-                document.querySelectorAll(`#sec-${currentSection} .kb-input`).forEach(el => {
-                    el.innerText = '';
-                });
-                if (currentSection === 'crew') setActiveInput('crew-emp-1', 'num');
-                if (currentSection === 'inop') setActiveInput('inop-dep-1', 'alpha');
+            if (currentSection === 'crew' || currentSection === 'inop' || currentSection === 'fuel' || currentSection === 'jett') {
+                if (currentSection === 'fuel') {
+                    document.querySelectorAll(`#sec-fuel .kb-input`).forEach(el => { el.innerText = ''; });
+                    setActiveInput('fuel-ro', 'num');
+                    document.getElementById('fuel-diff').innerText = '---';
+                    document.getElementById('fuel-diff').className = "text-base font-bold text-slate-100 px-2 text-right flex-1";
+                } else if (currentSection === 'jett') {
+                    document.getElementById('jett-fob').innerText = '';
+                    document.getElementById('jett-feed-tk').innerText = '190000';
+                    setActiveInput('jett-fob', 'num');
+                    calculateJett();
+                } else {
+                    document.querySelectorAll(`#sec-${currentSection} .kb-input`).forEach(el => {
+                        el.innerText = '';
+                    });
+                    if (currentSection === 'crew') setActiveInput('crew-emp-1', 'num');
+                    if (currentSection === 'inop') setActiveInput('inop-dep-1', 'alpha');
+                }
             }
         }
 
