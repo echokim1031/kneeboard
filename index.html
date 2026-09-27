@@ -4,400 +4,395 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Cockpit Digital Kneeboard - Offline</title>
-    <!-- OFFLINE VERSION: No external CDN/network resources required. -->
+    
+    <!-- iOS / Safari Standalone Web App Meta Tags -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="KNEEBOARD">
+
     <style>
+        /* ===== Self-contained offline stylesheet ===== */
+        * { 
+            box-sizing: border-box; 
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+        }
+        html, body { 
+            margin: 0; 
+            padding: 0;
+            width: 100%; 
+            height: 100%; 
+            -webkit-text-size-adjust: 100%;
+        }
+        html {
+            background: #020617;
+            color: #f1f5f9;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        body {
+            display: flex;
+            flex-direction: column;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+            font-size: 12px;
+            overflow: hidden;
+            background: #020617;
+        }
+        
+        button { 
+            font: inherit; 
+            color: inherit; 
+            border: none; 
+            cursor: pointer; 
+            background: none;
+        }
+        
         /* Custom scrollbar for compact cockpit view */
         ::-webkit-scrollbar { width: 4px; height: 4px; }
         ::-webkit-scrollbar-track { background: #0f172a; }
         ::-webkit-scrollbar-thumb { background: #334155; border-radius: 2px; }
+
+        /* Utility Layout Classes */
+        .flex { display: flex; }
+        .flex-col { flex-direction: column; }
+        .flex-1 { flex: 1 1 0%; }
+        .shrink-0 { flex-shrink: 0; }
+        .items-center { align-items: center; }
+        .justify-between { justify-content: space-between; }
+        .justify-center { justify-content: center; }
+        .hidden { display: none !important; }
+        .overflow-hidden { overflow: hidden; }
+        .overflow-y-auto { overflow-y: auto; -webkit-overflow-scrolling: touch; }
+        
+        .p-2 { padding: 0.5rem; }
+        .p-1-5 { padding: 0.375rem; }
+        .px-2 { padding-left: 0.5rem; padding-right: 0.5rem; }
+        .py-1 { padding-top: 0.25rem; padding-bottom: 0.25rem; }
+        .py-1-5 { padding-top: 0.375rem; padding-bottom: 0.375rem; }
+        .mb-1-5 { margin-bottom: 0.375rem; }
+        .gap-1 { gap: 0.25rem; }
+        .gap-1-5 { gap: 0.375rem; }
+        
+        .bg-slate-950 { background-color: #020617; }
+        .bg-slate-900 { background-color: #0f172a; }
+        .bg-slate-800 { background-color: #1e293b; }
+        .bg-blue-600 { background-color: #2563eb; }
+        .bg-red-950 { background-color: #450a0a; }
+
+        .border { border: 1px solid #334155; }
+        .border-b { border-bottom: 1px solid #334155; }
+        .border-t { border-top: 1px solid #334155; }
+        .border-slate-800 { border-color: #1e293b; }
+        .border-slate-700 { border-color: #334155; }
+        .border-red-800 { border-color: #991b1b; }
+
+        .rounded { border-radius: 0.25rem; }
+        .rounded-lg { border-radius: 0.5rem; }
+
+        .text-white { color: #ffffff; }
+        .text-slate-100 { color: #f1f5f9; }
+        .text-slate-300 { color: #cbd5e1; }
+        .text-slate-400 { color: #94a3b8; }
+        .text-amber-400 { color: #fbbf24; }
+        .text-amber-500 { color: #f59e0b; }
+        .text-blue-400 { color: #60a5fa; }
+        .text-cyan-400 { color: #22d3ee; }
+        .text-emerald-400 { color: #34d399; }
+        .text-red-300 { color: #fca5a5; }
+
+        .font-bold { font-weight: 700; }
+        .font-semibold { font-weight: 600; }
+        .text-xs { font-size: 0.75rem; line-height: 1rem; }
+        .text-sm { font-size: 0.875rem; line-height: 1.25rem; }
+        .text-base { font-size: 1rem; line-height: 1.5rem; }
+        .text-10 { font-size: 10px; }
+        .text-9 { font-size: 9px; }
+        .tracking-wider { letter-spacing: 0.05em; }
+        .uppercase { text-transform: uppercase; }
+        .text-center { text-align: center; }
+
+        /* Input Active Highlight */
+        .kb-input { 
+            cursor: pointer; 
+            min-height: 28px;
+            display: flex;
+            align-items: center;
+        }
         .input-active {
             border-color: #3b82f6 !important;
             box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.4);
             background-color: #1e293b !important;
         }
-        /* Prevent double tap zoom on iPad */
-        * { touch-action: manipulation; }
+
+        /* Fixed Keypad Layout */
+        .grid { display: grid; }
+        .grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .grid-cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+        .grid-cols-5 { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+        
+        #keypad-num, #keypad-alpha { height: 144px; }
+
+        /* CREW LIST Table 70:30 Fixed Width Styles */
+        .crew-table {
+            width: 100%;
+            table-layout: fixed;
+            border-collapse: collapse;
+        }
+        .crew-table th, .crew-table td {
+            padding: 0;
+            overflow: hidden;
+        }
+        .crew-table th:nth-child(1), .crew-table td:nth-child(1) {
+            width: 70%;
+        }
+        .crew-table th:nth-child(2), .crew-table td:nth-child(2) {
+            width: 30%;
+        }
+
+        /* Accordion Dropdown Styles for Checklists */
+        .accordion-header {
+            background-color: #1e293b;
+            border: 1px solid #334155;
+            padding: 8px 10px;
+            border-radius: 4px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            font-weight: bold;
+            color: #f1f5f9;
+        }
+        .accordion-header:active {
+            background-color: #334155;
+        }
+        .accordion-content {
+            background-color: #0f172a;
+            border: 1px solid #334155;
+            border-top: none;
+            padding: 8px;
+            border-bottom-left-radius: 4px;
+            border-bottom-right-radius: 4px;
+        }
     </style>
-
-<style>
-/* ===== Self-contained offline stylesheet ===== */
-* { box-sizing: border-box; }
-html, body { margin:0; width:100%; height:100%; }
-html {
-  background:#020617;
-  color:#f1f5f9;
-  user-select:none;
-}
-body {
-  height:100%;
-  display:flex;
-  flex-direction:column;
-  font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
-  font-size:12px;
-  overflow:hidden;
-  background:#020617;
-}
-button { font:inherit; color:inherit; }
-button { -webkit-tap-highlight-color:transparent; }
-* { touch-action:manipulation; }
-::-webkit-scrollbar { width:4px; height:4px; }
-::-webkit-scrollbar-track { background:#0f172a; }
-::-webkit-scrollbar-thumb { background:#334155; border-radius:2px; }
-
-.h-full{height:100%}.flex{display:flex}.flex-col{flex-direction:column}
-.items-center{align-items:center}.justify-between{justify-content:space-between}
-.shrink-0{flex-shrink:0}.flex-1{flex:1 1 0%}
-.overflow-hidden{overflow:hidden}.overflow-y-auto{overflow-y:auto}
-.whitespace-normal{white-space:normal}.break-all{overflow-wrap:anywhere}
-.hidden{display:none}
-.block{display:block}
-.relative{position:relative}
-.grid{display:grid}
-.grid-cols-2{grid-template-columns:repeat(2,minmax(0,1fr))}
-.grid-cols-3{grid-template-columns:repeat(3,minmax(0,1fr))}
-.grid-cols-4{grid-template-columns:repeat(4,minmax(0,1fr))}
-.grid-cols-5{grid-template-columns:repeat(5,minmax(0,1fr))}
-.gap-1{gap:.25rem}.gap-1\.5{gap:.375rem}
-.space-x-1>*+*{margin-left:.25rem}.space-x-2>*+*{margin-left:.5rem}
-.space-y-1\.5>*+*{margin-top:.375rem}.space-y-2>*+*{margin-top:.5rem}
-.p-1\.5{padding:.375rem}.p-2{padding:.5rem}
-.px-0\.5{padding-left:.125rem;padding-right:.125rem}
-.px-1\.5{padding-left:.375rem;padding-right:.375rem}
-.px-2{padding-left:.5rem;padding-right:.5rem}
-.px-3{padding-left:.75rem;padding-right:.75rem}
-.py-0\.5{padding-top:.125rem;padding-bottom:.125rem}
-.py-1\.5{padding-top:.375rem;padding-bottom:.375rem}
-.mb-0\.5{margin-bottom:.125rem}.mb-1\.5{margin-bottom:.375rem}
-.h-6{height:1.5rem}.h-7{height:1.75rem}.h-10{height:2.5rem}.h-36{height:9rem}
-.bg-slate-950{background:#020617}.bg-slate-950\/60{background:rgba(2,6,23,.6)}
-.bg-slate-900{background:#0f172a}.bg-slate-900\/90{background:rgba(15,23,42,.9)}
-.bg-slate-800{background:#1e293b}.bg-blue-600{background:#2563eb}
-.bg-blue-500{background:#3b82f6}.bg-red-950{background:#450a0a}
-.bg-red-950\/80{background:rgba(69,10,10,.8)}
-.bg-amber-950\/80{background:rgba(69,26,3,.8)}
-.border{border-width:1px;border-style:solid}
-.border-b{border-bottom-width:1px;border-bottom-style:solid}
-.border-t{border-top-width:1px;border-top-style:solid}
-.border-slate-700{border-color:#334155}.border-slate-800{border-color:#1e293b}
-.border-slate-800\/80{border-color:rgba(30,41,59,.8)}
-.border-blue-600{border-color:#2563eb}.border-red-800{border-color:#991b1b}
-.border-amber-800{border-color:#92400e}
-.rounded{border-radius:.25rem}.rounded-lg{border-radius:.5rem}
-.text-white{color:#fff}.text-slate-100{color:#f1f5f9}.text-slate-200{color:#e2e8f0}
-.text-slate-300{color:#cbd5e1}.text-slate-400{color:#94a3b8}
-.text-blue-400{color:#60a5fa}.text-amber-300{color:#fcd34d}
-.text-amber-400{color:#fbbf24}.text-amber-500{color:#f59e0b}
-.text-cyan-300{color:#67e8f9}.text-cyan-400{color:#22d3ee}
-.text-emerald-400{color:#34d399}.text-red-300{color:#fca5a5}
-.font-bold{font-weight:700}.font-semibold{font-weight:600}
-.text-xs{font-size:.75rem;line-height:1rem}
-.text-sm{font-size:.875rem;line-height:1.25rem}
-.text-\[9px\]{font-size:9px}.text-\[10px\]{font-size:10px}
-.text-base{font-size:1rem;line-height:1.5rem}
-.tracking-wider{letter-spacing:.05em}.uppercase{text-transform:uppercase}
-.shadow{box-shadow:0 1px 3px 0 rgba(0,0,0,.2),0 1px 2px -1px rgba(0,0,0,.2)}
-.shadow-sm{box-shadow:0 1px 2px rgba(0,0,0,.2)}
-.shadow-lg{box-shadow:0 10px 15px -3px rgba(0,0,0,.35)}
-.text-center{text-align:center}
-.flex.items-center.justify-center{display:flex;align-items:center;justify-content:center}
-.border-b.border-slate-800{border-bottom-color:#1e293b}
-.active\:bg-slate-700:active{background:#334155}
-.active\:bg-red-900:active{background:#7f1d1d}
-.active\:bg-amber-900:active{background:#78350f}
-.active\:bg-blue-500:active{background:#3b82f6}
-
-header { min-height:39px; }
-main { -webkit-overflow-scrolling:touch; }
-footer { min-height:0; }
-button { border:none; cursor:pointer; }
-.kb-input { cursor:pointer; }
-.input-active {
-  border-color:#3b82f6 !important;
-  box-shadow:0 0 0 2px rgba(59,130,246,.4);
-  background-color:#1e293b !important;
-}
-
-/* Classes used in the original markup whose appearance is better handled explicitly */
-header.bg-slate-900 { background:#0f172a; }
-footer.bg-slate-900 { background:#0f172a; }
-.grid > div, .grid > button { min-width:0; }
-
-/* Tailwind arbitrary/combined utility equivalents */
-.space-y-2 > * + * { margin-top:.5rem; }
-.space-y-1\.5 > * + * { margin-top:.375rem; }
-.p-2 { padding:.5rem; }
-.rounded-lg { border-radius:.5rem; }
-.overflow-y-auto { overflow-y:auto; }
-.whitespace-normal { white-space:normal; }
-.break-all { overflow-wrap:anywhere; }
-
-/* Ensure the two keypad grids keep their original fixed height. */
-#keypad-num, #keypad-alpha { height:144px; }
-
-/* iPad/Safari standalone local-file behavior */
-html, body { -webkit-text-size-adjust:100%; }
-</style>
-
-
-    <link rel="manifest" href="./manifest.json">
-    <link rel="apple-touch-icon" href="./apple-touch-icon.png">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="KNEEBOARD">
-
 </head>
 <body class="h-full flex flex-col font-mono text-xs overflow-hidden bg-slate-950">
 
     <!-- Top Bar Header -->
-    <header class="flex items-center justify-between px-3 py-1.5 bg-slate-900 border-b border-slate-800 shrink-0">
-        <div class="flex items-center space-x-2">
+    <header class="flex items-center justify-between px-2 py-1-5 bg-slate-900 border-b border-slate-800 shrink-0">
+        <div class="flex items-center" style="gap: 6px;">
             <span class="text-amber-500 text-sm">✈</span>
             <span class="font-bold tracking-wider text-slate-200">KNEEBOARD</span>
         </div>
-        <div class="flex items-center space-x-2">
-            <span id="utc-clock" class="text-amber-400 font-semibold bg-slate-950 px-2 py-0.5 rounded border border-slate-800">
+        <div class="flex items-center" style="gap: 6px;">
+            <span id="utc-clock" class="text-amber-400 font-semibold bg-slate-950 px-2 py-1 rounded border border-slate-800">
                 00:00:00 Z
             </span>
-            <button onclick="clearAllFields()" class="px-2 py-0.5 bg-red-950 text-red-300 border border-red-800 rounded active:bg-red-900">
-                CLR ALL
+            <button onclick="clearCurrentSection()" class="px-2 py-1 bg-red-950 text-red-300 border border-red-800 rounded">
+                CLR SEC
             </button>
         </div>
     </header>
 
-    <!-- Scrollable Main Content Form (Optimized for 30% Split View) -->
-    <main class="flex-1 overflow-y-auto p-2 space-y-2">
+    <!-- Top Navigation Tabs (5 Sections) -->
+    <nav class="flex bg-slate-900 border-b border-slate-800 shrink-0 overflow-x-auto" id="section-tabs">
+        <button onclick="switchSection('crew')" id="tab-crew" class="flex-1 py-1-5 px-1 text-center font-bold text-10 border-b-2 border-blue-600 text-blue-400">CREW LIST</button>
+        <button onclick="switchSection('inop')" id="tab-inop" class="flex-1 py-1-5 px-1 text-center font-bold text-10 text-slate-400">INOP STATION</button>
+        <button onclick="switchSection('chk')" id="tab-chk" class="flex-1 py-1-5 px-1 text-center font-bold text-10 text-slate-400">CHK LIST</button>
+        <button onclick="switchSection('fuel')" id="tab-fuel" class="flex-1 py-1-5 px-1 text-center font-bold text-10 text-slate-400">REMAINING FUEL</button>
+        <button onclick="switchSection('jett')" id="tab-jett" class="flex-1 py-1-5 px-1 text-center font-bold text-10 text-slate-400">JETT' CALC</button>
+    </nav>
 
-        <!-- Departure & Squawk Section -->
-        <div class="bg-slate-900/90 border border-slate-800 rounded-lg p-2 space-y-1.5 shadow-sm">
-            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-800 pb-0.5 flex justify-between">
-                <span>Flight / Clearance</span>
-                <span class="text-blue-400">ATC</span>
+    <!-- Scrollable Main Content Form -->
+    <main class="flex-1 overflow-y-auto p-2">
+
+        <!-- 1) CREW LIST SECTION (70:30 Fixed Table Width) -->
+        <section id="sec-crew" class="space-y-1-5">
+            <div class="bg-slate-900 border border-slate-800 rounded-lg p-2">
+                <table class="crew-table">
+                    <thead>
+                        <tr>
+                            <th class="text-10 font-bold text-slate-400 uppercase text-left py-1 px-1">EMP NO.</th>
+                            <th class="text-10 font-bold text-slate-400 uppercase text-left py-1 px-1">CODE</th>
+                        </tr>
+                    </thead>
+                    <tbody id="crew-rows">
+                        <!-- 8 Rows generated via JS for perfect binding -->
+                    </tbody>
+                </table>
             </div>
-            <div class="grid grid-cols-2 gap-1.5">
-                <div>
-                    <label class="text-[10px] text-slate-400 block mb-0.5">CALLSIGN / FLT</label>
-                    <div id="input-callsign" onclick="setActiveInput('input-callsign', 'alpha')" class="kb-input h-7 bg-slate-950 border border-slate-700 rounded px-2 flex items-center text-amber-400 font-bold overflow-hidden">
-                        AAL123
-                    </div>
+        </section>
+
+        <!-- 2) INOP STATION SECTION -->
+        <section id="sec-inop" class="hidden" style="display: flex; flex-direction: column; gap: 8px;">
+            <div class="bg-slate-900 border border-slate-800 rounded-lg p-2">
+                <div class="text-10 font-bold text-amber-400 uppercase tracking-wider border-b border-slate-800 pb-1 mb-1-5">
+                    DEP INOP STATION
                 </div>
-                <div>
-                    <label class="text-[10px] text-slate-400 block mb-0.5">SQUAWK</label>
-                    <div id="input-squawk" onclick="setActiveInput('input-squawk', 'num')" class="kb-input h-7 bg-slate-950 border border-slate-700 rounded px-2 flex items-center text-emerald-400 font-bold overflow-hidden">
-                        1200
-                    </div>
-                </div>
-            </div>
-            <div class="grid grid-cols-3 gap-1.5">
-                <div>
-                    <label class="text-[10px] text-slate-400 block mb-0.5">DEP</label>
-                    <div id="input-dep" onclick="setActiveInput('input-dep', 'alpha')" class="kb-input h-7 bg-slate-950 border border-slate-700 rounded px-2 flex items-center text-slate-200 overflow-hidden">
-                        RKSS
-                    </div>
-                </div>
-                <div>
-                    <label class="text-[10px] text-slate-400 block mb-0.5">ARR</label>
-                    <div id="input-arr" onclick="setActiveInput('input-arr', 'alpha')" class="kb-input h-7 bg-slate-950 border border-slate-700 rounded px-2 flex items-center text-slate-200 overflow-hidden">
-                        RKPC
-                    </div>
-                </div>
-                <div>
-                    <label class="text-[10px] text-slate-400 block mb-0.5">ALT (FT)</label>
-                    <div id="input-alt" onclick="setActiveInput('input-alt', 'num')" class="kb-input h-7 bg-slate-950 border border-slate-700 rounded px-2 flex items-center text-slate-200 overflow-hidden">
-                        24000
-                    </div>
+                <div id="dep-inop-rows" style="display: flex; flex-direction: column; gap: 4px;">
+                    <!-- 8 Input Lines -->
                 </div>
             </div>
+
+            <div class="bg-slate-900 border border-slate-800 rounded-lg p-2">
+                <div class="text-10 font-bold text-cyan-400 uppercase tracking-wider border-b border-slate-800 pb-1 mb-1-5">
+                    DEST INOP STATION
+                </div>
+                <div id="dest-inop-rows" style="display: flex; flex-direction: column; gap: 4px;">
+                    <!-- 8 Input Lines -->
+                </div>
+            </div>
+        </section>
+
+        <!-- 3) CHK LIST SECTION (Collapsible Accordion 1, 2, 3 Dropdown) -->
+        <section id="sec-chk" class="hidden" style="display: flex; flex-direction: column; gap: 8px;">
+            
+            <!-- Checklist 1 -->
             <div>
-                <label class="text-[10px] text-slate-400 block mb-0.5">CLEARANCE / ROUTE</label>
-                <div id="input-route" onclick="setActiveInput('input-route', 'alpha')" class="kb-input h-10 bg-slate-950 border border-slate-700 rounded p-1.5 text-slate-200 overflow-y-auto whitespace-normal break-all">
-                    B332 / FL240 / SEL2A
+                <div onclick="toggleAccordion('chk-1')" class="accordion-header">
+                    <span>1. CRUISE CHK LIST</span>
+                    <span id="chk-1-arrow" class="text-amber-400">▼</span>
+                </div>
+                <div id="chk-1" class="accordion-content hidden">
+                    <div id="input-chk1" onclick="setActiveInput('input-chk1', 'alpha')" class="kb-input bg-slate-950 border border-slate-700 rounded p-2 text-slate-200" style="min-height: 80px; align-items: flex-start;">
+                        - ENG INSTRUMENTS / FUEL CRZ MONITORING...<br>- ALTIMETER CHECK...
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Taxi & Runway Section -->
-        <div class="bg-slate-900/90 border border-slate-800 rounded-lg p-2 space-y-1.5 shadow-sm">
-            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-800 pb-0.5 flex justify-between">
-                <span>Taxi & Departure</span>
-                <span class="text-emerald-400">RWY / QNH</span>
-            </div>
-            <div class="grid grid-cols-3 gap-1.5">
-                <div>
-                    <label class="text-[10px] text-slate-400 block mb-0.5">RWY</label>
-                    <div id="input-rwy" onclick="setActiveInput('input-rwy', 'alpha')" class="kb-input h-7 bg-slate-950 border border-slate-700 rounded px-2 flex items-center text-amber-300 font-bold overflow-hidden">
-                        14L
-                    </div>
-                </div>
-                <div>
-                    <label class="text-[10px] text-slate-400 block mb-0.5">QNH (in/hPa)</label>
-                    <div id="input-qnh" onclick="setActiveInput('input-qnh', 'num')" class="kb-input h-7 bg-slate-950 border border-slate-700 rounded px-2 flex items-center text-cyan-300 font-bold overflow-hidden">
-                        29.92
-                    </div>
-                </div>
-                <div>
-                    <label class="text-[10px] text-slate-400 block mb-0.5">EFC TIME</label>
-                    <div id="input-efc" onclick="setActiveInput('input-efc', 'num')" class="kb-input h-7 bg-slate-950 border border-slate-700 rounded px-2 flex items-center text-slate-200 overflow-hidden">
-                        1425
-                    </div>
-                </div>
-            </div>
+            <!-- Checklist 2 -->
             <div>
-                <label class="text-[10px] text-slate-400 block mb-0.5">TAXI ROUTE</label>
-                <div id="input-taxi" onclick="setActiveInput('input-taxi', 'alpha')" class="kb-input h-7 bg-slate-950 border border-slate-700 rounded px-2 flex items-center text-slate-200 overflow-hidden">
-                    C / G / E1 / RW14L
+                <div onclick="toggleAccordion('chk-2')" class="accordion-header">
+                    <span>2. AFTER CREW CHG CHK LIST</span>
+                    <span id="chk-2-arrow" class="text-amber-400">►</span>
+                </div>
+                <div id="chk-2" class="accordion-content hidden">
+                    <div id="input-chk2" onclick="setActiveInput('input-chk2', 'alpha')" class="kb-input bg-slate-950 border border-slate-700 rounded p-2 text-slate-200" style="min-height: 80px; align-items: flex-start;">
+                        - COCKPIT HANDOVER / SYSTEMS BRIEFING...<br>- OXYGEN MASK / COMMS TEST...
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Fuel Calculation Section -->
-        <div class="bg-slate-900/90 border border-slate-800 rounded-lg p-2 space-y-1.5 shadow-sm">
-            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-800 pb-0.5 flex justify-between">
-                <span>Fuel Calculation (LBS)</span>
-                <span class="text-amber-400"><span>⛽</span> AUTO</span>
-            </div>
-            <div class="grid grid-cols-2 gap-1.5">
-                <div>
-                    <label class="text-[10px] text-slate-400 block mb-0.5">RAMP FUEL</label>
-                    <div id="input-ramp" onclick="setActiveInput('input-ramp', 'num')" class="kb-input h-7 bg-slate-950 border border-slate-700 rounded px-2 flex items-center text-slate-100 font-bold overflow-hidden">
-                        12500
-                    </div>
+            <!-- Checklist 3 -->
+            <div>
+                <div onclick="toggleAccordion('chk-3')" class="accordion-header">
+                    <span>3. LANDING PREP CHK LIST</span>
+                    <span id="chk-3-arrow" class="text-amber-400">►</span>
                 </div>
-                <div>
-                    <label class="text-[10px] text-slate-400 block mb-0.5">TAXI FUEL</label>
-                    <div id="input-taxifuel" onclick="setActiveInput('input-taxifuel', 'num')" class="kb-input h-7 bg-slate-950 border border-slate-700 rounded px-2 flex items-center text-slate-100 font-bold overflow-hidden">
-                        500
+                <div id="chk-3" class="accordion-content hidden">
+                    <div id="input-chk3" onclick="setActiveInput('input-chk3', 'alpha')" class="kb-input bg-slate-950 border border-slate-700 rounded p-2 text-slate-200" style="min-height: 80px; align-items: flex-start;">
+                        - ATIS / APPROACH BRIEFING COMPLETE...<br>- ECAM STATUS / LANDING PERFORMANCE...
                     </div>
                 </div>
             </div>
-            <div class="grid grid-cols-3 gap-1.5 bg-slate-950/60 p-1.5 rounded border border-slate-800/80">
-                <div>
-                    <span class="text-[9px] text-slate-400 block">TAKEOFF</span>
-                    <span id="calc-takeoff" class="text-sm font-bold text-emerald-400">12000</span>
-                </div>
-                <div>
-                    <label class="text-[9px] text-slate-400 block">TRIP FUEL</label>
-                    <div id="input-tripfuel" onclick="setActiveInput('input-tripfuel', 'num')" class="kb-input h-6 bg-slate-900 border border-slate-700 rounded px-1.5 flex items-center text-amber-300 font-bold overflow-hidden text-xs">
-                        8200
-                    </div>
-                </div>
-                <div>
-                    <span class="text-[9px] text-slate-400 block">LANDING</span>
-                    <span id="calc-landing" class="text-sm font-bold text-cyan-400">3800</span>
-                </div>
+
+        </section>
+
+        <!-- 4) REMAINING FUEL CALC SECTION -->
+        <section id="sec-fuel" class="hidden">
+            <div class="bg-slate-900 border border-slate-800 rounded-lg p-2 text-center text-slate-400 py-6">
+                <span class="text-amber-400 font-bold block mb-1">REMAINING FUEL CALC</span>
+                [Custom fuel formulas & inputs will be populated here]
             </div>
-        </div>
+        </section>
+
+        <!-- 5) JETT' CALC SECTION -->
+        <section id="sec-jett" class="hidden">
+            <div class="bg-slate-900 border border-slate-800 rounded-lg p-2 text-center text-slate-400 py-6">
+                <span class="text-red-300 font-bold block mb-1">JETTISON CALC</span>
+                [Jettison rate, GW, MLW, time calculations will be populated here]
+            </div>
+        </section>
 
     </main>
 
     <!-- Custom Keypads Bottom Dock -->
-    <footer class="bg-slate-900 border-t border-slate-800 p-2 shrink-0 shadow-lg">
+    <footer class="bg-slate-900 border-t border-slate-800 p-2 shrink-0">
         
         <!-- Keypad Selector Bar -->
-        <div class="flex items-center justify-between mb-1.5 px-0.5">
-            <div class="text-[10px] font-bold text-slate-400 flex items-center space-x-1">
-                <span>ACTIVE FIELD:</span>
+        <div class="flex items-center justify-between mb-1-5 px-1">
+            <div class="text-10 font-bold text-slate-400 flex items-center" style="gap: 4px;">
+                <span>ACTIVE:</span>
                 <span id="active-field-label" class="text-blue-400 uppercase">NONE</span>
             </div>
-            <div class="flex space-x-1">
-                <button id="tab-num" onclick="switchKeypad('num')" class="px-2 py-0.5 text-[10px] font-bold rounded bg-blue-600 text-white shadow">
+            <div class="flex" style="gap: 4px;">
+                <button id="tab-num" onclick="switchKeypad('num')" class="px-2 py-1 text-10 font-bold rounded bg-blue-600 text-white">
                     123 NUM
                 </button>
-                <button id="tab-alpha" onclick="switchKeypad('alpha')" class="px-2 py-0.5 text-[10px] font-bold rounded bg-slate-800 text-slate-400 border border-slate-700">
+                <button id="tab-alpha" onclick="switchKeypad('alpha')" class="px-2 py-1 text-10 font-bold rounded bg-slate-800 text-slate-400 border border-slate-700">
                     A-Z ALPHA
                 </button>
             </div>
         </div>
 
-        <!-- 1) CALCULATOR / NUMERIC KEYPAD -->
-        <div id="keypad-num" class="grid grid-cols-4 gap-1 h-36">
-            <button onclick="pressKey('7')" class="bg-slate-800 active:bg-slate-700 border border-slate-700 rounded text-base font-bold text-slate-100 flex items-center justify-center shadow">7</button>
-            <button onclick="pressKey('8')" class="bg-slate-800 active:bg-slate-700 border border-slate-700 rounded text-base font-bold text-slate-100 flex items-center justify-center shadow">8</button>
-            <button onclick="pressKey('9')" class="bg-slate-800 active:bg-slate-700 border border-slate-700 rounded text-base font-bold text-slate-100 flex items-center justify-center shadow">9</button>
-            <button onclick="pressKey('CLR')" class="bg-red-950/80 active:bg-red-900 border border-red-800 text-red-300 font-bold rounded text-xs flex items-center justify-center shadow">CLR</button>
+        <!-- 1) NUMERIC KEYPAD -->
+        <div id="keypad-num" class="grid grid-cols-4 gap-1">
+            <button onclick="pressKey('7')" class="bg-slate-800 border border-slate-700 rounded text-base font-bold text-slate-100 flex items-center justify-center">7</button>
+            <button onclick="pressKey('8')" class="bg-slate-800 border border-slate-700 rounded text-base font-bold text-slate-100 flex items-center justify-center">8</button>
+            <button onclick="pressKey('9')" class="bg-slate-800 border border-slate-700 rounded text-base font-bold text-slate-100 flex items-center justify-center">9</button>
+            <button onclick="pressKey('CLR')" class="bg-red-950 border border-red-800 text-red-300 font-bold rounded text-xs flex items-center justify-center">CLR</button>
 
-            <button onclick="pressKey('4')" class="bg-slate-800 active:bg-slate-700 border border-slate-700 rounded text-base font-bold text-slate-100 flex items-center justify-center shadow">4</button>
-            <button onclick="pressKey('5')" class="bg-slate-800 active:bg-slate-700 border border-slate-700 rounded text-base font-bold text-slate-100 flex items-center justify-center shadow">5</button>
-            <button onclick="pressKey('6')" class="bg-slate-800 active:bg-slate-700 border border-slate-700 rounded text-base font-bold text-slate-100 flex items-center justify-center shadow">6</button>
-            <button onclick="pressKey('BKSP')" class="bg-amber-950/80 active:bg-amber-900 border border-amber-800 text-amber-300 font-bold rounded text-xs flex items-center justify-center shadow"><span>⌫</span></button>
+            <button onclick="pressKey('4')" class="bg-slate-800 border border-slate-700 rounded text-base font-bold text-slate-100 flex items-center justify-center">4</button>
+            <button onclick="pressKey('5')" class="bg-slate-800 border border-slate-700 rounded text-base font-bold text-slate-100 flex items-center justify-center">5</button>
+            <button onclick="pressKey('6')" class="bg-slate-800 border border-slate-700 rounded text-base font-bold text-slate-100 flex items-center justify-center">6</button>
+            <button onclick="pressKey('BKSP')" class="bg-slate-800 border border-slate-700 text-amber-400 font-bold rounded text-xs flex items-center justify-center">⌫</button>
 
-            <button onclick="pressKey('1')" class="bg-slate-800 active:bg-slate-700 border border-slate-700 rounded text-base font-bold text-slate-100 flex items-center justify-center shadow">1</button>
-            <button onclick="pressKey('2')" class="bg-slate-800 active:bg-slate-700 border border-slate-700 rounded text-base font-bold text-slate-100 flex items-center justify-center shadow">2</button>
-            <button onclick="pressKey('3')" class="bg-slate-800 active:bg-slate-700 border border-slate-700 rounded text-base font-bold text-slate-100 flex items-center justify-center shadow">3</button>
-            <button onclick="pressKey('/')" class="bg-slate-800 active:bg-slate-700 border border-slate-700 rounded text-base font-bold text-cyan-400 flex items-center justify-center shadow">/</button>
+            <button onclick="pressKey('1')" class="bg-slate-800 border border-slate-700 rounded text-base font-bold text-slate-100 flex items-center justify-center">1</button>
+            <button onclick="pressKey('2')" class="bg-slate-800 border border-slate-700 rounded text-base font-bold text-slate-100 flex items-center justify-center">2</button>
+            <button onclick="pressKey('3')" class="bg-slate-800 border border-slate-700 rounded text-base font-bold text-slate-100 flex items-center justify-center">3</button>
+            <button onclick="pressKey('/')" class="bg-slate-800 border border-slate-700 rounded text-base font-bold text-cyan-400 flex items-center justify-center">/</button>
 
-            <button onclick="pressKey('0')" class="bg-slate-800 active:bg-slate-700 border border-slate-700 rounded text-base font-bold text-slate-100 flex items-center justify-center shadow">0</button>
-            <button onclick="pressKey('.')" class="bg-slate-800 active:bg-slate-700 border border-slate-700 rounded text-base font-bold text-slate-100 flex items-center justify-center shadow">.</button>
-            <button onclick="pressKey('SP')" class="bg-slate-800 active:bg-slate-700 border border-slate-700 rounded text-xs font-bold text-slate-300 flex items-center justify-center shadow">SP</button>
-            <button onclick="pressKey('NEXT')" class="bg-blue-600 active:bg-blue-500 text-white font-bold rounded text-xs flex items-center justify-center shadow">NEXT</button>
+            <button onclick="pressKey('0')" class="bg-slate-800 border border-slate-700 rounded text-base font-bold text-slate-100 flex items-center justify-center">0</button>
+            <button onclick="pressKey('.')" class="bg-slate-800 border border-slate-700 rounded text-base font-bold text-slate-100 flex items-center justify-center">.</button>
+            <button onclick="pressKey('SP')" class="bg-slate-800 border border-slate-700 rounded text-xs font-bold text-slate-300 flex items-center justify-center">SP</button>
+            <button onclick="pressKey('NEXT')" class="bg-blue-600 text-white font-bold rounded text-xs flex items-center justify-center">NEXT</button>
         </div>
 
         <!-- 2) 5x6 ALPHABET KEYPAD (A-Z, /, SP, CLR) -->
-        <div id="keypad-alpha" class="grid grid-cols-5 gap-1 h-36 hidden">
-            <!-- Row 1: A B C D E -->
-            <button onclick="pressKey('A')" class="bg-slate-800 active:bg-slate-700 border border-slate-700 rounded text-sm font-bold text-slate-100 flex items-center justify-center shadow">A</button>
-            <button onclick="pressKey('B')" class="bg-slate-800 active:bg-slate-700 border border-slate-700 rounded text-sm font-bold text-slate-100 flex items-center justify-center shadow">B</button>
-            <button onclick="pressKey('C')" class="bg-slate-800 active:bg-slate-700 border border-slate-700 rounded text-sm font-bold text-slate-100 flex items-center justify-center shadow">C</button>
-            <button onclick="pressKey('D')" class="bg-slate-800 active:bg-slate-700 border border-slate-700 rounded text-sm font-bold text-slate-100 flex items-center justify-center shadow">D</button>
-            <button onclick="pressKey('E')" class="bg-slate-800 active:bg-slate-700 border border-slate-700 rounded text-sm font-bold text-slate-100 flex items-center justify-center shadow">E</button>
+        <div id="keypad-alpha" class="grid grid-cols-5 gap-1 hidden">
+            <button onclick="pressKey('A')" class="bg-slate-800 border border-slate-700 rounded text-sm font-bold text-slate-100 flex items-center justify-center">A</button>
+            <button onclick="pressKey('B')" class="bg-slate-800 border border-slate-700 rounded text-sm font-bold text-slate-100 flex items-center justify-center">B</button>
+            <button onclick="pressKey('C')" class="bg-slate-800 border border-slate-700 rounded text-sm font-bold text-slate-100 flex items-center justify-center">C</button>
+            <button onclick="pressKey('D')" class="bg-slate-800 border border-slate-700 rounded text-sm font-bold text-slate-100 flex items-center justify-center">D</button>
+            <button onclick="pressKey('E')" class="bg-slate-800 border border-slate-700 rounded text-sm font-bold text-slate-100 flex items-center justify-center">E</button>
 
-            <!-- Row 2: F G H I J -->
-            <button onclick="pressKey('F')" class="bg-slate-800 active:bg-slate-700 border border-slate-700 rounded text-sm font-bold text-slate-100 flex items-center justify-center shadow">F</button>
-            <button onclick="pressKey('G')" class="bg-slate-800 active:bg-slate-700 border border-slate-700 rounded text-sm font-bold text-slate-100 flex items-center justify-center shadow">G</button>
-            <button onclick="pressKey('H')" class="bg-slate-800 active:bg-slate-700 border border-slate-700 rounded text-sm font-bold text-slate-100 flex items-center justify-center shadow">H</button>
-            <button onclick="pressKey('I')" class="bg-slate-800 active:bg-slate-700 border border-slate-700 rounded text-sm font-bold text-slate-100 flex items-center justify-center shadow">I</button>
-            <button onclick="pressKey('J')" class="bg-slate-800 active:bg-slate-700 border border-slate-700 rounded text-sm font-bold text-slate-100 flex items-center justify-center shadow">J</button>
+            <button onclick="pressKey('F')" class="bg-slate-800 border border-slate-700 rounded text-sm font-bold text-slate-100 flex items-center justify-center">F</button>
+            <button onclick="pressKey('G')" class="bg-slate-800 border border-slate-700 rounded text-sm font-bold text-slate-100 flex items-center justify-center">G</button>
+            <button onclick="pressKey('H')" class="bg-slate-800 border border-slate-700 rounded text-sm font-bold text-slate-100 flex items-center justify-center">H</button>
+            <button onclick="pressKey('I')" class="bg-slate-800 border border-slate-700 rounded text-sm font-bold text-slate-100 flex items-center justify-center">I</button>
+            <button onclick="pressKey('J')" class="bg-slate-800 border border-slate-700 rounded text-sm font-bold text-slate-100 flex items-center justify-center">J</button>
 
-            <!-- Row 3: K L M N O -->
-            <button onclick="pressKey('K')" class="bg-slate-800 active:bg-slate-700 border border-slate-700 rounded text-sm font-bold text-slate-100 flex items-center justify-center shadow">K</button>
-            <button onclick="pressKey('L')" class="bg-slate-800 active:bg-slate-700 border border-slate-700 rounded text-sm font-bold text-slate-100 flex items-center justify-center shadow">L</button>
-            <button onclick="pressKey('M')" class="bg-slate-800 active:bg-slate-700 border border-slate-700 rounded text-sm font-bold text-slate-100 flex items-center justify-center shadow">M</button>
-            <button onclick="pressKey('N')" class="bg-slate-800 active:bg-slate-700 border border-slate-700 rounded text-sm font-bold text-slate-100 flex items-center justify-center shadow">N</button>
-            <button onclick="pressKey('O')" class="bg-slate-800 active:bg-slate-700 border border-slate-700 rounded text-sm font-bold text-slate-100 flex items-center justify-center shadow">O</button>
+            <button onclick="pressKey('K')" class="bg-slate-800 border border-slate-700 rounded text-sm font-bold text-slate-100 flex items-center justify-center">K</button>
+            <button onclick="pressKey('L')" class="bg-slate-800 border border-slate-700 rounded text-sm font-bold text-slate-100 flex items-center justify-center">L</button>
+            <button onclick="pressKey('M')" class="bg-slate-800 border border-slate-700 rounded text-sm font-bold text-slate-100 flex items-center justify-center">M</button>
+            <button onclick="pressKey('N')" class="bg-slate-800 border border-slate-700 rounded text-sm font-bold text-slate-100 flex items-center justify-center">N</button>
+            <button onclick="pressKey('O')" class="bg-slate-800 border border-slate-700 rounded text-sm font-bold text-slate-100 flex items-center justify-center">O</button>
 
-            <!-- Row 4: P Q R S T -->
-            <button onclick="pressKey('P')" class="bg-slate-800 active:bg-slate-700 border border-slate-700 rounded text-sm font-bold text-slate-100 flex items-center justify-center shadow">P</button>
-            <button onclick="pressKey('Q')" class="bg-slate-800 active:bg-slate-700 border border-slate-700 rounded text-sm font-bold text-slate-100 flex items-center justify-center shadow">Q</button>
-            <button onclick="pressKey('R')" class="bg-slate-800 active:bg-slate-700 border border-slate-700 rounded text-sm font-bold text-slate-100 flex items-center justify-center shadow">R</button>
-            <button onclick="pressKey('S')" class="bg-slate-800 active:bg-slate-700 border border-slate-700 rounded text-sm font-bold text-slate-100 flex items-center justify-center shadow">S</button>
-            <button onclick="pressKey('T')" class="bg-slate-800 active:bg-slate-700 border border-slate-700 rounded text-sm font-bold text-slate-100 flex items-center justify-center shadow">T</button>
+            <button onclick="pressKey('P')" class="bg-slate-800 border border-slate-700 rounded text-sm font-bold text-slate-100 flex items-center justify-center">P</button>
+            <button onclick="pressKey('Q')" class="bg-slate-800 border border-slate-700 rounded text-sm font-bold text-slate-100 flex items-center justify-center">Q</button>
+            <button onclick="pressKey('R')" class="bg-slate-800 border border-slate-700 rounded text-sm font-bold text-slate-100 flex items-center justify-center">R</button>
+            <button onclick="pressKey('S')" class="bg-slate-800 border border-slate-700 rounded text-sm font-bold text-slate-100 flex items-center justify-center">S</button>
+            <button onclick="pressKey('T')" class="bg-slate-800 border border-slate-700 rounded text-sm font-bold text-slate-100 flex items-center justify-center">T</button>
 
-            <!-- Row 5: U V W X Y -->
-            <button onclick="pressKey('U')" class="bg-slate-800 active:bg-slate-700 border border-slate-700 rounded text-sm font-bold text-slate-100 flex items-center justify-center shadow">U</button>
-            <button onclick="pressKey('V')" class="bg-slate-800 active:bg-slate-700 border border-slate-700 rounded text-sm font-bold text-slate-100 flex items-center justify-center shadow">V</button>
-            <button onclick="pressKey('W')" class="bg-slate-800 active:bg-slate-700 border border-slate-700 rounded text-sm font-bold text-slate-100 flex items-center justify-center shadow">W</button>
-            <button onclick="pressKey('X')" class="bg-slate-800 active:bg-slate-700 border border-slate-700 rounded text-sm font-bold text-slate-100 flex items-center justify-center shadow">X</button>
-            <button onclick="pressKey('Y')" class="bg-slate-800 active:bg-slate-700 border border-slate-700 rounded text-sm font-bold text-slate-100 flex items-center justify-center shadow">Y</button>
+            <button onclick="pressKey('U')" class="bg-slate-800 border border-slate-700 rounded text-sm font-bold text-slate-100 flex items-center justify-center">U</button>
+            <button onclick="pressKey('V')" class="bg-slate-800 border border-slate-700 rounded text-sm font-bold text-slate-100 flex items-center justify-center">V</button>
+            <button onclick="pressKey('W')" class="bg-slate-800 border border-slate-700 rounded text-sm font-bold text-slate-100 flex items-center justify-center">W</button>
+            <button onclick="pressKey('X')" class="bg-slate-800 border border-slate-700 rounded text-sm font-bold text-slate-100 flex items-center justify-center">X</button>
+            <button onclick="pressKey('Y')" class="bg-slate-800 border border-slate-700 rounded text-sm font-bold text-slate-100 flex items-center justify-center">Y</button>
 
-            <!-- Row 6: Z, /, SP, CLR, NEXT -->
-            <button onclick="pressKey('Z')" class="bg-slate-800 active:bg-slate-700 border border-slate-700 rounded text-sm font-bold text-slate-100 flex items-center justify-center shadow">Z</button>
-            <button onclick="pressKey('/')" class="bg-slate-800 active:bg-slate-700 border border-slate-700 rounded text-sm font-bold text-cyan-400 flex items-center justify-center shadow">/</button>
-            <button onclick="pressKey('SP')" class="bg-slate-800 active:bg-slate-700 border border-slate-700 rounded text-xs font-bold text-emerald-400 flex items-center justify-center shadow">SP</button>
-            <button onclick="pressKey('CLR')" class="bg-red-950/80 active:bg-red-900 border border-red-800 rounded text-xs font-bold text-red-300 flex items-center justify-center shadow">CLR</button>
-            <button onclick="pressKey('NEXT')" class="bg-blue-600 active:bg-blue-500 text-white font-bold rounded text-xs flex items-center justify-center shadow">NEXT</button>
+            <button onclick="pressKey('Z')" class="bg-slate-800 border border-slate-700 rounded text-sm font-bold text-slate-100 flex items-center justify-center">Z</button>
+            <button onclick="pressKey('/')" class="bg-slate-800 border border-slate-700 rounded text-sm font-bold text-cyan-400 flex items-center justify-center">/</button>
+            <button onclick="pressKey('SP')" class="bg-slate-800 border border-slate-700 rounded text-xs font-bold text-emerald-400 flex items-center justify-center">SP</button>
+            <button onclick="pressKey('CLR')" class="bg-red-950 border border-red-800 rounded text-xs font-bold text-red-300 flex items-center justify-center">CLR</button>
+            <button onclick="pressKey('NEXT')" class="bg-blue-600 text-white font-bold rounded text-xs flex items-center justify-center">NEXT</button>
         </div>
     </footer>
 
     <!-- JavaScript Logic -->
     <script>
-        // State management
-        let activeInputId = 'input-callsign';
+        // State Management
+        let currentSection = 'crew';
+        let activeInputId = '';
         let currentMode = 'alpha';
-
-        const inputList = [
-            { id: 'input-callsign', mode: 'alpha', label: 'CALLSIGN' },
-            { id: 'input-squawk', mode: 'num', label: 'SQUAWK' },
-            { id: 'input-dep', mode: 'alpha', label: 'DEP' },
-            { id: 'input-arr', mode: 'alpha', label: 'ARR' },
-            { id: 'input-alt', mode: 'num', label: 'ALTITUDE' },
-            { id: 'input-route', mode: 'alpha', label: 'ROUTE' },
-            { id: 'input-rwy', mode: 'alpha', label: 'RUNWAY' },
-            { id: 'input-qnh', mode: 'num', label: 'QNH' },
-            { id: 'input-efc', mode: 'num', label: 'EFC TIME' },
-            { id: 'input-taxi', mode: 'alpha', label: 'TAXI ROUTE' },
-            { id: 'input-ramp', mode: 'num', label: 'RAMP FUEL' },
-            { id: 'input-taxifuel', mode: 'num', label: 'TAXI FUEL' },
-            { id: 'input-tripfuel', mode: 'num', label: 'TRIP FUEL' }
-        ];
 
         // UTC Clock
         function updateClock() {
@@ -410,25 +405,102 @@ html, body { -webkit-text-size-adjust:100%; }
         setInterval(updateClock, 1000);
         updateClock();
 
-        // Keypad Active Field Selection
-        function setActiveInput(id, preferredMode = 'num') {
-            document.querySelectorAll('.kb-input').forEach(el => el.classList.remove('input-active'));
-            const target = document.getElementById(id);
-            if (!target) return;
-            
-            target.classList.add('input-active');
-            activeInputId = id;
+        // Prevent Documents / Viewer Fullscreen Touch Toggle Event Bubble
+        document.body.addEventListener('touchstart', function(e) {
+            if (e.target.tagName === 'BUTTON' || e.target.classList.contains('kb-input') || e.target.classList.contains('accordion-header')) {
+                e.stopPropagation();
+            }
+        }, { passive: false });
 
-            const config = inputList.find(item => item.id === id);
-            if (config) {
-                document.getElementById('active-field-label').innerText = config.label;
-                switchKeypad(config.mode);
+        // Initialize Dynamic Table Rows & Inputs on Load
+        function initFormRows() {
+            // 1) CREW LIST (8 Rows with 70:30 fixed ratio)
+            const crewBody = document.getElementById('crew-rows');
+            crewBody.innerHTML = '';
+            for (let i = 1; i <= 8; i++) {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td style="padding: 2px;">
+                        <div id="crew-emp-${i}" onclick="setActiveInput('crew-emp-${i}', 'num')" class="kb-input bg-slate-950 border border-slate-700 rounded px-2 text-amber-400 font-bold overflow-hidden"></div>
+                    </td>
+                    <td style="padding: 2px;">
+                        <div id="crew-code-${i}" onclick="setActiveInput('crew-code-${i}', 'alpha')" class="kb-input bg-slate-950 border border-slate-700 rounded px-2 text-cyan-400 font-bold overflow-hidden"></div>
+                    </td>
+                `;
+                crewBody.appendChild(tr);
+            }
+
+            // 2) INOP STATION (8 DEP, 8 DEST)
+            const depInopContainer = document.getElementById('dep-inop-rows');
+            const destInopContainer = document.getElementById('dest-inop-rows');
+            depInopContainer.innerHTML = '';
+            destInopContainer.innerHTML = '';
+
+            for (let i = 1; i <= 8; i++) {
+                depInopContainer.innerHTML += `
+                    <div id="inop-dep-${i}" onclick="setActiveInput('inop-dep-${i}', 'alpha')" class="kb-input bg-slate-950 border border-slate-700 rounded px-2 text-slate-200 overflow-hidden"></div>
+                `;
+                destInopContainer.innerHTML += `
+                    <div id="inop-dest-${i}" onclick="setActiveInput('inop-dest-${i}', 'alpha')" class="kb-input bg-slate-950 border border-slate-700 rounded px-2 text-slate-200 overflow-hidden"></div>
+                `;
+            }
+
+            // Set Initial Active Input Field
+            setActiveInput('crew-emp-1', 'num');
+        }
+
+        // Tab Section Switcher
+        function switchSection(sec) {
+            currentSection = sec;
+            const sections = ['crew', 'inop', 'chk', 'fuel', 'jett'];
+            
+            sections.forEach(s => {
+                const tabEl = document.getElementById(`tab-${s}`);
+                const secEl = document.getElementById(`sec-${s}`);
+                
+                if (s === sec) {
+                    secEl.classList.remove('hidden');
+                    tabEl.className = "flex-1 py-1-5 px-1 text-center font-bold text-10 border-b-2 border-blue-600 text-blue-400";
+                } else {
+                    secEl.classList.add('hidden');
+                    tabEl.className = "flex-1 py-1-5 px-1 text-center font-bold text-10 text-slate-400";
+                }
+            });
+
+            // Set default input focus per section
+            if (sec === 'crew') setActiveInput('crew-emp-1', 'num');
+            if (sec === 'inop') setActiveInput('inop-dep-1', 'alpha');
+            if (sec === 'chk') setActiveInput('input-chk1', 'alpha');
+        }
+
+        // Accordion Dropdown Handler for Checklists
+        function toggleAccordion(id) {
+            const content = document.getElementById(id);
+            const arrow = document.getElementById(`${id}-arrow`);
+            
+            if (content.classList.contains('hidden')) {
+                content.classList.remove('hidden');
+                arrow.innerText = '▼';
             } else {
-                switchKeypad(preferredMode);
+                content.classList.add('hidden');
+                arrow.innerText = '►';
             }
         }
 
-        // Toggle between NUM and ALPHA Keypads
+        // Set Active Field & Preferred Keypad Mode
+        function setActiveInput(id, preferredMode = 'alpha') {
+            document.querySelectorAll('.kb-input').forEach(el => el.classList.remove('input-active'));
+            const target = document.getElementById(id);
+            if (!target) return;
+
+            target.classList.add('input-active');
+            activeInputId = id;
+
+            document.getElementById('active-field-label').innerText = id.toUpperCase().replace(/-/g, ' ');
+            switchKeypad(preferredMode);
+        }
+
+        // Toggle NUM and ALPHA Keypads
         function switchKeypad(mode) {
             currentMode = mode;
             const numPad = document.getElementById('keypad-num');
@@ -439,85 +511,59 @@ html, body { -webkit-text-size-adjust:100%; }
             if (mode === 'num') {
                 numPad.classList.remove('hidden');
                 alphaPad.classList.add('hidden');
-                tabNum.className = "px-2 py-0.5 text-[10px] font-bold rounded bg-blue-600 text-white shadow";
-                tabAlpha.className = "px-2 py-0.5 text-[10px] font-bold rounded bg-slate-800 text-slate-400 border border-slate-700";
+                tabNum.className = "px-2 py-1 text-10 font-bold rounded bg-blue-600 text-white";
+                tabAlpha.className = "px-2 py-1 text-10 font-bold rounded bg-slate-800 text-slate-400 border border-slate-700";
             } else {
                 alphaPad.classList.remove('hidden');
                 numPad.classList.add('hidden');
-                tabAlpha.className = "px-2 py-0.5 text-[10px] font-bold rounded bg-blue-600 text-white shadow";
-                tabNum.className = "px-2 py-0.5 text-[10px] font-bold rounded bg-slate-800 text-slate-400 border border-slate-700";
+                tabAlpha.className = "px-2 py-1 text-10 font-bold rounded bg-blue-600 text-white";
+                tabNum.className = "px-2 py-1 text-10 font-bold rounded bg-slate-800 text-slate-400 border border-slate-700";
             }
         }
 
-        // Keypad Input Handler
+        // Virtual Keypad Input Logic
         function pressKey(key) {
             if (!activeInputId) return;
             const target = document.getElementById(activeInputId);
             if (!target) return;
 
-            let currentVal = target.innerText.trim();
+            let currentVal = target.innerHTML.trim();
 
             if (key === 'CLR') {
                 target.innerText = '';
             } else if (key === 'BKSP') {
-                target.innerText = currentVal.slice(0, -1);
+                target.innerText = target.innerText.slice(0, -1);
             } else if (key === 'SP') {
-                target.innerText = currentVal + ' ';
+                target.innerText += ' ';
             } else if (key === 'NEXT') {
                 moveToNextInput();
             } else {
-                target.innerText = currentVal + key;
+                target.innerText += key;
             }
-
-            calculateFuel();
         }
 
-        // Cycle through form fields
+        // Move to Next Available Field Automatically
         function moveToNextInput() {
-            const currentIndex = inputList.findIndex(item => item.id === activeInputId);
-            if (currentIndex !== -1) {
-                const nextIndex = (currentIndex + 1) % inputList.length;
-                const nextItem = inputList[nextIndex];
-                setActiveInput(nextItem.id, nextItem.mode);
+            const allInputs = Array.from(document.querySelectorAll('#sec-' + currentSection + ' .kb-input'));
+            const currentIndex = allInputs.findIndex(el => el.id === activeInputId);
+            if (currentIndex !== -1 && currentIndex < allInputs.length - 1) {
+                const nextEl = allInputs[currentIndex + 1];
+                const mode = nextEl.id.includes('emp') ? 'num' : 'alpha';
+                setActiveInput(nextEl.id, mode);
             }
         }
 
-        // Real-time Fuel Calculator Logic
-        function calculateFuel() {
-            const ramp = parseFloat(document.getElementById('input-ramp')?.innerText) || 0;
-            const taxi = parseFloat(document.getElementById('input-taxifuel')?.innerText) || 0;
-            const trip = parseFloat(document.getElementById('input-tripfuel')?.innerText) || 0;
-
-            const takeoff = Math.max(0, ramp - taxi);
-            const landing = Math.max(0, takeoff - trip);
-
-            document.getElementById('calc-takeoff').innerText = Math.round(takeoff);
-            document.getElementById('calc-landing').innerText = Math.round(landing);
-        }
-
-        // Clear All Fields
-        function clearAllFields() {
-            inputList.forEach(item => {
-                const el = document.getElementById(item.id);
-                if (el) el.innerText = '';
+        // Clear Current Section Inputs
+        function clearCurrentSection() {
+            document.querySelectorAll('#sec-' + currentSection + ' .kb-input').forEach(el => {
+                el.innerText = '';
             });
-            calculateFuel();
         }
 
-        // Initialize default state on load
+        // Initialize App
         window.onload = function() {
-            setActiveInput('input-callsign', 'alpha');
-            calculateFuel();
+            initFormRows();
         };
     </script>
-
-<script>
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./service-worker.js').catch(() => {});
-  });
-}
-</script>
-
 </body>
 </html>
