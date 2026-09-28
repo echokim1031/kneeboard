@@ -1,270 +1,169 @@
 <!DOCTYPE html>
-<html lang="en" class="h-full bg-slate-950 text-slate-100 select-none">
+<html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Cockpit Digital Kneeboard - Offline</title>
-    
-    <!-- iOS / Safari Standalone Web App Meta Tags -->
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="KNEEBOARD">
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KNEEBOARD - Flight Deck Log & Calc</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* ===== Self-contained offline stylesheet ===== */
-        * { 
-            box-sizing: border-box; 
-            touch-action: manipulation;
-            -webkit-tap-highlight-color: transparent;
+        .text-10 { font-size: 10px; line-height: 12px; }
+        .py-1-5 { padding-top: 0.375rem; padding-bottom: 0.375rem; }
+        .space-y-1-5 > :not([hidden]) ~ :not([hidden]) {
+            --tw-space-y-reverse: 0;
+            margin-top: calc(0.375rem * calc(1 - var(--tw-space-y-reverse)));
+            margin-bottom: calc(0.375rem * var(--tw-space-y-reverse));
         }
-        html, body { 
-            margin: 0; 
-            padding: 0;
-            width: 100%; 
-            height: 100%; 
-            -webkit-text-size-adjust: 100%;
+        
+        /* Active Input Highlight */
+        .input-active {
+            border-color: #3b82f6 !important;
+            box-shadow: 0 0 0 1px #3b82f6 !important;
+            background-color: #0f172a !important;
         }
-        html {
-            background: #020617;
-            color: #f1f5f9;
+
+        /* Prevent text selection on virtual keyboard */
+        .kb-btn {
             user-select: none;
             -webkit-user-select: none;
         }
-        body {
-            display: flex;
-            flex-direction: column;
-            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
-            font-size: 12px;
-            overflow: hidden;
-            background: #020617;
-        }
-        
-        button { 
-            font: inherit; 
-            color: inherit; 
-            border: none; 
-            cursor: pointer; 
-            background: none;
-        }
-        
-        /* Custom scrollbar for compact cockpit view */
-        ::-webkit-scrollbar { width: 4px; height: 4px; }
-        ::-webkit-scrollbar-track { background: #0f172a; }
-        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 2px; }
 
-        /* Utility Layout Classes */
-        .flex { display: flex; }
-        .flex-col { flex-direction: column; }
-        .flex-1 { flex: 1 1 0%; }
-        .shrink-0 { flex-shrink: 0; }
-        .items-center { align-items: center; }
-        .justify-between { justify-content: space-between; }
-        .justify-center { justify-content: center; }
-        .hidden { display: none !important; }
-        .overflow-hidden { overflow: hidden; }
-        .overflow-y-auto { overflow-y: auto; -webkit-overflow-scrolling: touch; }
-        
-        .p-2 { padding: 0.5rem; }
-        .p-3 { padding: 0.75rem; }
-        .p-1-5 { padding: 0.375rem; }
-        .px-1 { padding-left: 0.25rem; padding-right: 0.25rem; }
-        .px-2 { padding-left: 0.5rem; padding-right: 0.5rem; }
-        .py-1 { padding-top: 0.25rem; padding-bottom: 0.25rem; }
-        .py-1-5 { padding-top: 0.375rem; padding-bottom: 0.375rem; }
-        .py-6 { padding-top: 1.5rem; padding-bottom: 1.5rem; }
-        .pb-1 { padding-bottom: 0.25rem; }
-        .mb-1 { margin-bottom: 0.25rem; }
-        .mb-2 { margin-bottom: 0.5rem; }
-        .mb-1-5 { margin-bottom: 0.375rem; }
-        .mr-2 { margin-right: 0.5rem; }
-        .gap-1 { gap: 0.25rem; }
-        .gap-1-5 { gap: 0.375rem; }
-        .space-y-1-5 > * + * { margin-top: 0.375rem; }
-        
-        .bg-slate-950 { background-color: #020617; }
-        .bg-slate-900 { background-color: #0f172a; }
-        .bg-slate-800 { background-color: #1e293b; }
-        .bg-blue-600 { background-color: #2563eb; }
-        .bg-red-950 { background-color: #450a0a; }
-
-        .border { border: 1px solid #334155; }
-        .border-b { border-bottom: 1px solid #334155; }
-        .border-b-2 { border-bottom: 2px solid #2563eb; }
-        .border-t { border-top: 1px solid #334155; }
-        .border-slate-800 { border-color: #1e293b; }
-        .border-slate-700 { border-color: #334155; }
-        .border-red-800 { border-color: #991b1b; }
-
-        .rounded { border-radius: 0.25rem; }
-        .rounded-lg { border-radius: 0.5rem; }
-
-        .text-white { color: #ffffff; }
-        .text-slate-100 { color: #f1f5f9; }
-        .text-slate-200 { color: #e2e8f0; }
-        .text-slate-300 { color: #cbd5e1; }
-        .text-slate-400 { color: #94a3b8; }
-        .text-amber-400 { color: #fbbf24; }
-        .text-amber-500 { color: #f59e0b; }
-        .text-blue-400 { color: #60a5fa; }
-        .text-cyan-400 { color: #22d3ee; }
-        .text-emerald-400 { color: #34d399; }
-        .text-red-300 { color: #fca5a5; }
-
-        .font-bold { font-weight: 700; }
-        .font-semibold { font-weight: 600; }
-        .font-mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
-        .text-xs { font-size: 0.75rem; line-height: 1rem; }
-        .text-sm { font-size: 0.875rem; line-height: 1.25rem; }
-        .text-base { font-size: 1rem; line-height: 1.5rem; }
-        .text-10 { font-size: 10px; }
-        .tracking-wider { letter-spacing: 0.05em; }
-        .uppercase { text-transform: uppercase; }
-        .text-center { text-align: center; }
-        .text-left { text-align: left; }
-        .block { display: block; }
-        .select-text { user-select: text; -webkit-user-select: text; }
-
-        /* Input Active Highlight */
-        .kb-input { 
-            cursor: pointer; 
-            min-height: 28px;
-            display: flex;
-            align-items: center;
-        }
-        .input-active {
-            border-color: #3b82f6 !important;
-            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.4);
-            background-color: #1e293b !important;
-        }
-
-        /* Fixed Keypad Layout */
-        .grid { display: grid; }
-        .grid-cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-        .grid-cols-5 { grid-template-columns: repeat(5, minmax(0, 1fr)); }
-        
-        #keypad-num, #keypad-alpha { height: 144px; }
-
-        /* CREW LIST Table 70:30 Fixed Width Styles */
-        .crew-table {
-            width: 100%;
-            table-layout: fixed;
-            border-collapse: collapse;
-        }
-        .crew-table th, .crew-table td {
-            padding: 0;
-            overflow: hidden;
-        }
-        .crew-table th:nth-child(1), .crew-table td:nth-child(1) {
-            width: 70%;
-        }
-        .crew-table th:nth-child(2), .crew-table td:nth-child(2) {
-            width: 30%;
-        }
-
-        /* Accordion Dropdown Styles for Checklists */
+        /* Accordion Header Style */
         .accordion-header {
-            background-color: #1e293b;
-            border: 1px solid #334155;
-            padding: 8px 10px;
-            border-radius: 4px;
+            background-color: #0f172a;
+            border: 1px solid #1e293b;
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.25rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #e2e8f0;
             cursor: pointer;
-            font-weight: bold;
-            color: #f1f5f9;
+            transition: background-color 0.15s ease;
         }
-        .accordion-header:active {
-            background-color: #334155;
-        }
-        .accordion-content {
-            background-color: #0f172a;
-            border: 1px solid #334155;
-            border-top: none;
-            padding: 8px;
-            border-bottom-left-radius: 4px;
-            border-bottom-right-radius: 4px;
+        .accordion-header:hover {
+            background-color: #1e293b;
         }
     </style>
 </head>
-<body class="h-full flex flex-col font-mono text-xs overflow-hidden bg-slate-950">
+<body class="bg-slate-950 text-slate-100 flex flex-col h-screen overflow-hidden font-sans select-none">
 
-    <!-- Top Bar Header -->
-    <header class="flex items-center justify-between px-2 py-1-5 bg-slate-900 border-b border-slate-800 shrink-0">
-        <div class="flex items-center" style="gap: 6px;">
-            <span class="text-amber-500 text-sm">✈</span>
-            <span class="font-bold tracking-wider text-slate-200">KNEEBOARD</span>
+    <!-- 1. TOP HEADER BAR -->
+    <div class="bg-slate-950 border-b border-slate-800 px-3 py-1.5 flex items-center justify-between shrink-0">
+        <!-- Left: DST Toggle -->
+        <div class="flex items-center space-x-3">
+            <button id="dst-btn" onclick="toggleDST()" class="flex items-center justify-center px-2 py-1 rounded border border-slate-700 bg-slate-900 hover:bg-slate-800 transition-colors" title="Toggle Daylight Saving Time (DST)">
+                <span id="dst-icon" class="text-xs select-none">☀️</span>
+                <span id="dst-label" class="text-10 font-bold ml-1.5 text-slate-400">DST OFF</span>
+            </button>
         </div>
-        <div class="flex items-center" style="gap: 6px;">
-            <span id="utc-clock" class="text-amber-400 font-semibold bg-slate-950 px-2 py-1 rounded border border-slate-800">
-                00:00:00 Z
-            </span>
-            <button onclick="clearCurrentSection()" class="px-2 py-1 bg-red-950 text-red-300 border border-red-800 rounded">
+
+        <!-- Right: Timers (UTC / PST / EST) & CLR SEC Button -->
+        <div class="flex items-center space-x-2">
+            <div class="flex items-center space-x-2 bg-slate-900 px-2.5 py-1 rounded border border-slate-800 text-10 font-mono font-bold">
+                <span class="text-amber-400">UTC <span id="clock-utc">00:00:00</span></span>
+                <span class="text-slate-700">|</span>
+                <span class="text-cyan-400">PST <span id="clock-pst">00:00:00</span></span>
+                <span class="text-slate-700">|</span>
+                <span class="text-emerald-400">EST <span id="clock-est">00:00:00</span></span>
+            </div>
+
+            <button onclick="clearCurrentSection()" class="px-2.5 py-1 bg-red-950/80 hover:bg-red-900 text-red-400 border border-red-700/80 rounded text-10 font-bold tracking-wider transition-colors">
                 CLR SEC
             </button>
         </div>
-    </header>
+    </div>
 
-    <!-- Top Navigation Tabs (5 Sections) -->
-    <nav class="flex bg-slate-900 border-b border-slate-800 shrink-0 overflow-x-auto" id="section-tabs">
-        <button onclick="switchSection('crew')" id="tab-crew" class="flex-1 py-1-5 px-1 text-center font-bold text-10 border-b-2 border-blue-600 text-blue-400">CREW LIST</button>
-        <button onclick="switchSection('inop')" id="tab-inop" class="flex-1 py-1-5 px-1 text-center font-bold text-10 text-slate-400">INOP STATION</button>
-        <button onclick="switchSection('chk')" id="tab-chk" class="flex-1 py-1-5 px-1 text-center font-bold text-10 text-slate-400">CHK LIST</button>
-        <button onclick="switchSection('fuel')" id="tab-fuel" class="flex-1 py-1-5 px-1 text-center font-bold text-10 text-slate-400">REMAINING FUEL</button>
-        <button onclick="switchSection('jett')" id="tab-jett" class="flex-1 py-1-5 px-1 text-center font-bold text-10 text-slate-400">JETT' CALC</button>
-    </nav>
+    <!-- 2. SECTION TABS NAVIGATION -->
+    <div class="flex border-b border-slate-800 bg-slate-900/50 shrink-0">
+        <button id="tab-crew" onclick="switchSection('crew')" class="flex-1 py-1-5 px-1 text-center font-bold text-10 text-slate-400">CREW LIST</button>
+        <button id="tab-inop" onclick="switchSection('inop')" class="flex-1 py-1-5 px-1 text-center font-bold text-10 text-slate-400">INOP STATION</button>
+        <button id="tab-chk" onclick="switchSection('chk')" class="flex-1 py-1-5 px-1 text-center font-bold text-10 text-slate-400">CHK LIST</button>
+        <button id="tab-fuel" onclick="switchSection('fuel')" class="flex-1 py-1-5 px-1 text-center font-bold text-10 text-slate-400">REMAINING FUEL</button>
+        <button id="tab-jett" onclick="switchSection('jett')" class="flex-1 py-1-5 px-1 text-center font-bold text-10 text-slate-400">JETT' CALC</button>
+    </div>
 
-    <!-- Scrollable Main Content Form -->
-    <main class="flex-1 overflow-y-auto p-2">
+    <!-- 3. MAIN WORKSPACE / CONTENT AREA -->
+    <div class="flex-1 overflow-y-auto p-2 space-y-2">
 
-        <!-- 1) CREW LIST SECTION (70:30 Fixed Table Width) -->
-        <section id="sec-crew" class="space-y-1-5">
-            <div class="bg-slate-900 border border-slate-800 rounded-lg p-2">
-                <table class="crew-table">
-                    <thead>
-                        <tr>
-                            <th class="text-10 font-bold text-slate-400 uppercase text-left py-1 px-1">EMP NO.</th>
-                            <th class="text-10 font-bold text-slate-400 uppercase text-left py-1 px-1">CODE</th>
-                        </tr>
-                    </thead>
-                    <tbody id="crew-rows">
-                        <!-- 8 Rows generated via JS -->
-                    </tbody>
-                </table>
+        <!-- SECTION 1: CREW LIST (8 명) -->
+        <div id="sec-crew" class="space-y-2 hidden">
+            <div class="border border-slate-800 rounded bg-slate-900/30 p-2">
+                <div class="grid grid-cols-2 gap-2 text-10 font-bold text-slate-400 mb-1 px-1">
+                    <div>EMP NO.</div>
+                    <div>CODE</div>
+                </div>
+                <div class="space-y-1">
+                    <!-- PIC -->
+                    <div class="grid grid-cols-2 gap-2">
+                        <div id="pic-emp" onclick="setActiveInput('pic-emp', 'num')" class="kb-input bg-slate-950 border border-slate-800 rounded px-2 text-amber-400 font-bold h-7 flex items-center"></div>
+                        <div id="pic-name" onclick="setActiveInput('pic-name', 'alpha')" class="kb-input bg-slate-950 border border-slate-800 rounded px-2 text-slate-200 font-bold h-7 flex items-center"></div>
+                    </div>
+                    <!-- CP -->
+                    <div class="grid grid-cols-2 gap-2">
+                        <div id="cp-emp" onclick="setActiveInput('cp-emp', 'num')" class="kb-input bg-slate-950 border border-slate-800 rounded px-2 text-amber-400 font-bold h-7 flex items-center"></div>
+                        <div id="cp-name" onclick="setActiveInput('cp-name', 'alpha')" class="kb-input bg-slate-950 border border-slate-800 rounded px-2 text-slate-200 font-bold h-7 flex items-center"></div>
+                    </div>
+                    <!-- R1 -->
+                    <div class="grid grid-cols-2 gap-2">
+                        <div id="r1-emp" onclick="setActiveInput('r1-emp', 'num')" class="kb-input bg-slate-950 border border-slate-800 rounded px-2 text-amber-400 font-bold h-7 flex items-center"></div>
+                        <div id="r1-name" onclick="setActiveInput('r1-name', 'alpha')" class="kb-input bg-slate-950 border border-slate-800 rounded px-2 text-slate-200 font-bold h-7 flex items-center"></div>
+                    </div>
+                    <!-- R2 -->
+                    <div class="grid grid-cols-2 gap-2">
+                        <div id="r2-emp" onclick="setActiveInput('r2-emp', 'num')" class="kb-input bg-slate-950 border border-slate-800 rounded px-2 text-amber-400 font-bold h-7 flex items-center"></div>
+                        <div id="r2-name" onclick="setActiveInput('r2-name', 'alpha')" class="kb-input bg-slate-950 border border-slate-800 rounded px-2 text-slate-200 font-bold h-7 flex items-center"></div>
+                    </div>
+                    <!-- R3 -->
+                    <div class="grid grid-cols-2 gap-2">
+                        <div id="r3-emp" onclick="setActiveInput('r3-emp', 'num')" class="kb-input bg-slate-950 border border-slate-800 rounded px-2 text-amber-400 font-bold h-7 flex items-center"></div>
+                        <div id="r3-name" onclick="setActiveInput('r3-name', 'alpha')" class="kb-input bg-slate-950 border border-slate-800 rounded px-2 text-slate-200 font-bold h-7 flex items-center"></div>
+                    </div>
+                    <!-- R4 -->
+                    <div class="grid grid-cols-2 gap-2">
+                        <div id="r4-emp" onclick="setActiveInput('r4-emp', 'num')" class="kb-input bg-slate-950 border border-slate-800 rounded px-2 text-amber-400 font-bold h-7 flex items-center"></div>
+                        <div id="r4-name" onclick="setActiveInput('r4-name', 'alpha')" class="kb-input bg-slate-950 border border-slate-800 rounded px-2 text-slate-200 font-bold h-7 flex items-center"></div>
+                    </div>
+                    <!-- R5 -->
+                    <div class="grid grid-cols-2 gap-2">
+                        <div id="r5-emp" onclick="setActiveInput('r5-emp', 'num')" class="kb-input bg-slate-950 border border-slate-800 rounded px-2 text-amber-400 font-bold h-7 flex items-center"></div>
+                        <div id="r5-name" onclick="setActiveInput('r5-name', 'alpha')" class="kb-input bg-slate-950 border border-slate-800 rounded px-2 text-slate-200 font-bold h-7 flex items-center"></div>
+                    </div>
+                    <!-- R6 -->
+                    <div class="grid grid-cols-2 gap-2">
+                        <div id="r6-emp" onclick="setActiveInput('r6-emp', 'num')" class="kb-input bg-slate-950 border border-slate-800 rounded px-2 text-amber-400 font-bold h-7 flex items-center"></div>
+                        <div id="r6-name" onclick="setActiveInput('r6-name', 'alpha')" class="kb-input bg-slate-950 border border-slate-800 rounded px-2 text-slate-200 font-bold h-7 flex items-center"></div>
+                    </div>
+                </div>
             </div>
-        </section>
+        </div>
 
-        <!-- 2) INOP STATION SECTION -->
-        <section id="sec-inop" class="hidden" style="display: flex; flex-direction: column; gap: 8px;">
-            <div class="bg-slate-900 border border-slate-800 rounded-lg p-2">
-                <div class="text-10 font-bold text-amber-400 uppercase tracking-wider border-b border-slate-800 pb-1 mb-1-5">
-                    DEP INOP STATION
+        <!-- SECTION 2: INOP STATION -->
+        <div id="sec-inop" class="space-y-2 hidden">
+            <div class="grid grid-cols-2 gap-2">
+                <div class="border border-slate-800 rounded p-1.5 bg-slate-900/20">
+                    <div class="text-10 font-bold text-amber-400 mb-1 px-1">DEP INOP</div>
+                    <div id="dep-inop-rows" class="space-y-1"></div>
                 </div>
-                <div id="dep-inop-rows" style="display: flex; flex-direction: column; gap: 4px;">
-                    <!-- 8 Input Lines -->
+                <div class="border border-slate-800 rounded p-1.5 bg-slate-900/20">
+                    <div class="text-10 font-bold text-cyan-400 mb-1 px-1">DEST INOP</div>
+                    <div id="dest-inop-rows" class="space-y-1"></div>
                 </div>
             </div>
+        </div>
 
-            <div class="bg-slate-900 border border-slate-800 rounded-lg p-2">
-                <div class="text-10 font-bold text-cyan-400 uppercase tracking-wider border-b border-slate-800 pb-1 mb-1-5">
-                    DEST INOP STATION
-                </div>
-                <div id="dest-inop-rows" style="display: flex; flex-direction: column; gap: 4px;">
-                    <!-- 8 Input Lines -->
-                </div>
-            </div>
-        </section>
-
-        <!-- 3) CHK LIST SECTION (Collapsible Accordion Read-Only Lists) -->
-        <section id="sec-chk" class="hidden" style="display: flex; flex-direction: column; gap: 8px;">
+        <!-- SECTION 3: CHK LIST SECTION -->
+        <section id="sec-chk" class="hidden flex flex-col gap-2">
             
             <!-- Checklist 1: CRUISE CHK LIST -->
             <div>
                 <div onclick="toggleAccordion('chk-1')" class="accordion-header">
                     <span>1. CRUISE CHK LIST</span>
-                    <span id="chk-1-arrow" class="text-amber-400">▼</span>
+                    <span id="chk-1-arrow" class="text-amber-400">►</span>
                 </div>
-                <div id="chk-1" class="accordion-content">
+                <div id="chk-1" class="accordion-content hidden mt-1">
                     <div class="bg-slate-950 border border-slate-800 rounded p-3 text-slate-200 space-y-1-5 font-mono text-xs select-text">
                         <div class="text-amber-400 font-bold border-b border-slate-800 pb-1 mb-2">■ CRUISE CHECKLIST</div>
                         <div class="flex items-start"><span class="text-blue-400 mr-2">1.</span><span>SYSTEM CHK</span></div>
@@ -287,7 +186,7 @@
                     <span>2. AFTER CREW CHG CHK LIST</span>
                     <span id="chk-2-arrow" class="text-amber-400">►</span>
                 </div>
-                <div id="chk-2" class="accordion-content hidden">
+                <div id="chk-2" class="accordion-content hidden mt-1">
                     <div class="bg-slate-950 border border-slate-800 rounded p-3 text-slate-200 space-y-1-5 font-mono text-xs select-text">
                         <div class="text-amber-400 font-bold border-b border-slate-800 pb-1 mb-2">■ AFTER CREW CHG CHECKLIST</div>
                         <div class="flex items-start"><span class="text-blue-400 mr-2">1.</span><span>SYSTEM CHK</span></div>
@@ -304,7 +203,7 @@
                     <span>3. LANDING PREP CHK LIST</span>
                     <span id="chk-3-arrow" class="text-amber-400">►</span>
                 </div>
-                <div id="chk-3" class="accordion-content hidden">
+                <div id="chk-3" class="accordion-content hidden mt-1">
                     <div class="bg-slate-950 border border-slate-800 rounded p-3 text-slate-200 space-y-1-5 font-mono text-xs select-text">
                         <div class="text-amber-400 font-bold border-b border-slate-800 pb-1 mb-2">■ LANDING PREP CHECKLIST</div>
                         <div class="flex items-start"><span class="text-blue-400 mr-2">1.</span><span>ATIS UPDATE</span></div>
@@ -321,470 +220,475 @@
 
         </section>
 
-        <!-- 4) REMAINING FUEL CALC SECTION -->
-        <section id="sec-fuel" class="hidden space-y-1-5">
-            <div class="bg-slate-900 border border-slate-800 rounded-lg p-2 space-y-1-5">
-                <div class="text-10 font-bold text-amber-400 uppercase tracking-wider border-b border-slate-800 pb-1 mb-1-5">
-                    FUEL CHECK & DIFFERENCE CALC
-                </div>
-                
-                <!-- R/O FUEL -->
+        <!-- SECTION 4: REMAINING FUEL -->
+        <div id="sec-fuel" class="space-y-2 hidden">
+            <div class="border border-slate-800 rounded p-2 bg-slate-900/30 space-y-2">
                 <div class="flex items-center justify-between">
-                    <span class="text-slate-400 text-10 font-bold shrink-0" style="width: 95px;">R/O FUEL:</span>
-                    <div id="fuel-ro" onclick="setActiveInput('fuel-ro', 'num')" class="kb-input bg-slate-950 border border-slate-700 rounded px-2 text-amber-400 font-bold flex-1 ml-2 text-right"></div>
+                    <span class="text-xs font-bold text-slate-400">R / O FUEL</span>
+                    <div id="fuel-ro" onclick="setActiveInput('fuel-ro', 'num')" class="kb-input bg-slate-950 border border-slate-800 rounded px-2 text-amber-400 font-bold h-8 flex items-center justify-end w-36"></div>
                 </div>
-
-                <!-- FUEL USED -->
                 <div class="flex items-center justify-between">
-                    <span class="text-slate-400 text-10 font-bold shrink-0" style="width: 95px;">FUEL USED:</span>
-                    <div id="fuel-used" onclick="setActiveInput('fuel-used', 'num')" class="kb-input bg-slate-950 border border-slate-700 rounded px-2 text-cyan-400 font-bold flex-1 ml-2 text-right"></div>
+                    <span class="text-xs font-bold text-slate-400">USED FUEL</span>
+                    <div id="fuel-used" onclick="setActiveInput('fuel-used', 'num')" class="kb-input bg-slate-950 border border-slate-800 rounded px-2 text-amber-400 font-bold h-8 flex items-center justify-end w-36"></div>
                 </div>
-
-                <!-- REMAINING FUEL (ACTUAL) -->
                 <div class="flex items-center justify-between">
-                    <span class="text-slate-400 text-10 font-bold shrink-0" style="width: 95px;">REMAINING:</span>
-                    <div id="fuel-act" onclick="setActiveInput('fuel-act', 'num')" class="kb-input bg-slate-950 border border-slate-700 rounded px-2 text-emerald-400 font-bold flex-1 ml-2 text-right"></div>
+                    <span class="text-xs font-bold text-slate-400">ACTUAL FOB</span>
+                    <div id="fuel-act" onclick="setActiveInput('fuel-act', 'num')" class="kb-input bg-slate-950 border border-slate-800 rounded px-2 text-amber-400 font-bold h-8 flex items-center justify-end w-36"></div>
                 </div>
-
-                <!-- CALCULATED RESULT (DIFFERENCE) -->
-                <div class="border-t border-slate-800 pt-1-5 mt-2 flex items-center justify-between">
-                    <span class="text-slate-300 text-10 font-bold shrink-0" style="width: 95px;">DIFF (ACT/PLN):</span>
-                    <span id="fuel-diff" class="text-base font-bold text-slate-100 px-2 text-right flex-1">---</span>
+                <hr class="border-slate-800">
+                <div class="flex items-center justify-between pt-1">
+                    <span class="text-xs font-bold text-slate-300">DIFF (ACT - PLAN)</span>
+                    <div id="fuel-diff" class="text-base font-bold text-slate-100 px-2 text-right flex-1">---</div>
                 </div>
-            </div>
-        </section>
-
-        <!-- 5) JETT' CALC SECTION -->
-        <section id="sec-jett" class="hidden space-y-1-5">
-            <div class="bg-slate-900 border border-slate-800 rounded-lg p-2 space-y-1-5">
-                <div class="text-10 font-bold text-amber-400 uppercase tracking-wider border-b border-slate-800 pb-1 mb-1-5">
-                    JETTISON FUEL CALC
-                </div>
-                
-                <!-- FOB -->
-                <div class="flex items-center justify-between">
-                    <span class="text-slate-400 text-10 font-bold shrink-0" style="width: 95px;">FOB:</span>
-                    <div id="jett-fob" onclick="setActiveInput('jett-fob', 'num')" class="kb-input bg-slate-950 border border-slate-700 rounded px-2 text-amber-400 font-bold flex-1 ml-2 text-right"></div>
-                </div>
-
-                <!-- SUM OF FEED TK -->
-                <div class="flex items-center justify-between">
-                    <span class="text-slate-400 text-10 font-bold shrink-0" style="width: 95px;">FEED TK:</span>
-                    <div id="jett-feed-tk" onclick="setJettDefaultInput('jett-feed-tk', '190000')" class="kb-input bg-slate-950 border border-slate-700 rounded px-2 text-cyan-400 font-bold flex-1 ml-2 text-right">190000</div>
-                </div>
-
-                <!-- EXP LB -->
-                <div class="flex items-center justify-between">
-                    <span class="text-slate-400 text-10 font-bold shrink-0" style="width: 95px;">EXP LB:</span>
-                    <span id="jett-exp" class="text-base font-bold text-slate-100 px-2 text-right flex-1">---</span>
-                </div>
-
-                <!-- MIN -->
-                <div class="border-t border-slate-800 pt-1-5 mt-2 flex items-center justify-between">
-                    <span class="text-slate-300 text-10 font-bold shrink-0" style="width: 95px;">MIN:</span>
-                    <span id="jett-min" class="text-base font-bold text-emerald-400 px-2 text-right flex-1">---</span>
-                </div>
-            </div>
-        </section>
-
-    </main>
-
-    <!-- Custom Keypads Bottom Dock -->
-    <footer class="bg-slate-900 border-t border-slate-800 p-2 shrink-0">
-        
-        <!-- Keypad Selector Bar -->
-        <div class="flex items-center justify-between mb-1-5 px-1">
-            <div class="text-10 font-bold text-slate-400 flex items-center" style="gap: 4px;">
-                <span>ACTIVE:</span>
-                <span id="active-field-label" class="text-blue-400 uppercase">NONE</span>
-            </div>
-            <div class="flex" style="gap: 4px;">
-                <button id="tab-num" onclick="switchKeypad('num')" class="px-2 py-1 text-10 font-bold rounded bg-blue-600 text-white">
-                    123 NUM
-                </button>
-                <button id="tab-alpha" onclick="switchKeypad('alpha')" class="px-2 py-1 text-10 font-bold rounded bg-slate-800 text-slate-400 border border-slate-700">
-                    A-Z ALPHA
-                </button>
             </div>
         </div>
 
-        <!-- 1) NUMERIC KEYPAD -->
-        <div id="keypad-num" class="grid grid-cols-4 gap-1">
-            <button onclick="pressKey('7')" class="bg-slate-800 border border-slate-700 rounded text-base font-bold text-slate-100 flex items-center justify-center">7</button>
-            <button onclick="pressKey('8')" class="bg-slate-800 border border-slate-700 rounded text-base font-bold text-slate-100 flex items-center justify-center">8</button>
-            <button onclick="pressKey('9')" class="bg-slate-800 border border-slate-700 rounded text-base font-bold text-slate-100 flex items-center justify-center">9</button>
-            <button onclick="pressKey('CLR')" class="bg-red-950 border border-red-800 text-red-300 font-bold rounded text-xs flex items-center justify-center">CLR</button>
-
-            <button onclick="pressKey('4')" class="bg-slate-800 border border-slate-700 rounded text-base font-bold text-slate-100 flex items-center justify-center">4</button>
-            <button onclick="pressKey('5')" class="bg-slate-800 border border-slate-700 rounded text-base font-bold text-slate-100 flex items-center justify-center">5</button>
-            <button onclick="pressKey('6')" class="bg-slate-800 border border-slate-700 rounded text-base font-bold text-slate-100 flex items-center justify-center">6</button>
-            <button onclick="pressKey('BKSP')" class="bg-slate-800 border border-slate-700 text-amber-400 font-bold rounded text-xs flex items-center justify-center">⌫</button>
-
-            <button onclick="pressKey('1')" class="bg-slate-800 border border-slate-700 rounded text-base font-bold text-slate-100 flex items-center justify-center">1</button>
-            <button onclick="pressKey('2')" class="bg-slate-800 border border-slate-700 rounded text-base font-bold text-slate-100 flex items-center justify-center">2</button>
-            <button onclick="pressKey('3')" class="bg-slate-800 border border-slate-700 rounded text-base font-bold text-slate-100 flex items-center justify-center">3</button>
-            <button onclick="pressKey('/')" class="bg-slate-800 border border-slate-700 rounded text-base font-bold text-cyan-400 flex items-center justify-center">/</button>
-
-            <button onclick="pressKey('0')" class="bg-slate-800 border border-slate-700 rounded text-base font-bold text-slate-100 flex items-center justify-center">0</button>
-            <button onclick="pressKey('.')" class="bg-slate-800 border border-slate-700 rounded text-base font-bold text-slate-100 flex items-center justify-center">.</button>
-            <button onclick="pressKey('SP')" class="bg-slate-800 border border-slate-700 rounded text-xs font-bold text-slate-300 flex items-center justify-center">SP</button>
-            <button onclick="pressKey('NEXT')" class="bg-blue-600 text-white font-bold rounded text-xs flex items-center justify-center">NEXT</button>
+        <!-- SECTION 5: JETTISON CALC -->
+        <div id="sec-jett" class="space-y-2 hidden">
+            <div class="border border-slate-800 rounded p-2 bg-slate-900/30 space-y-2">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-bold text-slate-400">CURRENT FOB</span>
+                    <div id="jett-fob" onclick="setActiveInput('jett-fob', 'num')" class="kb-input bg-slate-950 border border-slate-800 rounded px-2 text-amber-400 font-bold h-8 flex items-center justify-end w-36"></div>
+                </div>
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-bold text-slate-400">FEED TANK TARGET</span>
+                    <div id="jett-feed-tk" onclick="setJettDefaultInput('jett-feed-tk', '190000')" class="kb-input bg-slate-950 border border-slate-800 rounded px-2 text-cyan-400 font-bold h-8 flex items-center justify-end w-36">190000</div>
+                </div>
+                <hr class="border-slate-800">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-bold text-slate-300">EXPECTED JETTISON</span>
+                    <div id="jett-exp" class="text-base font-bold text-amber-400 px-2 text-right">---</div>
+                </div>
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-bold text-slate-300">ESTIMATED TIME</span>
+                    <div id="jett-min" class="text-base font-bold text-emerald-400 px-2 text-right">---</div>
+                </div>
+            </div>
         </div>
 
-        <!-- 2) 5x6 ALPHABET KEYPAD (A-Z, /, SP, CLR) -->
-        <div id="keypad-alpha" class="grid grid-cols-5 gap-1 hidden">
-            <button onclick="pressKey('A')" class="bg-slate-800 border border-slate-700 rounded text-sm font-bold text-slate-100 flex items-center justify-center">A</button>
-            <button onclick="pressKey('B')" class="bg-slate-800 border border-slate-700 rounded text-sm font-bold text-slate-100 flex items-center justify-center">B</button>
-            <button onclick="pressKey('C')" class="bg-slate-800 border border-slate-700 rounded text-sm font-bold text-slate-100 flex items-center justify-center">C</button>
-            <button onclick="pressKey('D')" class="bg-slate-800 border border-slate-700 rounded text-sm font-bold text-slate-100 flex items-center justify-center">D</button>
-            <button onclick="pressKey('E')" class="bg-slate-800 border border-slate-700 rounded text-sm font-bold text-slate-100 flex items-center justify-center">E</button>
+    </div>
 
-            <button onclick="pressKey('F')" class="bg-slate-800 border border-slate-700 rounded text-sm font-bold text-slate-100 flex items-center justify-center">F</button>
-            <button onclick="pressKey('G')" class="bg-slate-800 border border-slate-700 rounded text-sm font-bold text-slate-100 flex items-center justify-center">G</button>
-            <button onclick="pressKey('H')" class="bg-slate-800 border border-slate-700 rounded text-sm font-bold text-slate-100 flex items-center justify-center">H</button>
-            <button onclick="pressKey('I')" class="bg-slate-800 border border-slate-700 rounded text-sm font-bold text-slate-100 flex items-center justify-center">I</button>
-            <button onclick="pressKey('J')" class="bg-slate-800 border border-slate-700 rounded text-sm font-bold text-slate-100 flex items-center justify-center">J</button>
-
-            <button onclick="pressKey('K')" class="bg-slate-800 border border-slate-700 rounded text-sm font-bold text-slate-100 flex items-center justify-center">K</button>
-            <button onclick="pressKey('L')" class="bg-slate-800 border border-slate-700 rounded text-sm font-bold text-slate-100 flex items-center justify-center">L</button>
-            <button onclick="pressKey('M')" class="bg-slate-800 border border-slate-700 rounded text-sm font-bold text-slate-100 flex items-center justify-center">M</button>
-            <button onclick="pressKey('N')" class="bg-slate-800 border border-slate-700 rounded text-sm font-bold text-slate-100 flex items-center justify-center">N</button>
-            <button onclick="pressKey('O')" class="bg-slate-800 border border-slate-700 rounded text-sm font-bold text-slate-100 flex items-center justify-center">O</button>
-
-            <button onclick="pressKey('P')" class="bg-slate-800 border border-slate-700 rounded text-sm font-bold text-slate-100 flex items-center justify-center">P</button>
-            <button onclick="pressKey('Q')" class="bg-slate-800 border border-slate-700 rounded text-sm font-bold text-slate-100 flex items-center justify-center">Q</button>
-            <button onclick="pressKey('R')" class="bg-slate-800 border border-slate-700 rounded text-sm font-bold text-slate-100 flex items-center justify-center">R</button>
-            <button onclick="pressKey('S')" class="bg-slate-800 border border-slate-700 rounded text-sm font-bold text-slate-100 flex items-center justify-center">S</button>
-            <button onclick="pressKey('T')" class="bg-slate-800 border border-slate-700 rounded text-sm font-bold text-slate-100 flex items-center justify-center">T</button>
-
-            <button onclick="pressKey('U')" class="bg-slate-800 border border-slate-700 rounded text-sm font-bold text-slate-100 flex items-center justify-center">U</button>
-            <button onclick="pressKey('V')" class="bg-slate-800 border border-slate-700 rounded text-sm font-bold text-slate-100 flex items-center justify-center">V</button>
-            <button onclick="pressKey('W')" class="bg-slate-800 border border-slate-700 rounded text-sm font-bold text-slate-100 flex items-center justify-center">W</button>
-            <button onclick="pressKey('X')" class="bg-slate-800 border border-slate-700 rounded text-sm font-bold text-slate-100 flex items-center justify-center">X</button>
-            <button onclick="pressKey('Y')" class="bg-slate-800 border border-slate-700 rounded text-sm font-bold text-slate-100 flex items-center justify-center">Y</button>
-
-            <button onclick="pressKey('Z')" class="bg-slate-800 border border-slate-700 rounded text-sm font-bold text-slate-100 flex items-center justify-center">Z</button>
-            <button onclick="pressKey('/')" class="bg-slate-800 border border-slate-700 rounded text-sm font-bold text-cyan-400 flex items-center justify-center">/</button>
-            <button onclick="pressKey('SP')" class="bg-slate-800 border border-slate-700 rounded text-xs font-bold text-emerald-400 flex items-center justify-center">SP</button>
-            <button onclick="pressKey('CLR')" class="bg-red-950 border border-red-800 rounded text-xs font-bold text-red-300 flex items-center justify-center">CLR</button>
-            <button onclick="pressKey('NEXT')" class="bg-blue-600 text-white font-bold rounded text-xs flex items-center justify-center">NEXT</button>
+    <!-- 4. BOTTOM VIRTUAL KEYPAD & STATUS BAR -->
+    <div class="bg-slate-950 border-t border-slate-800 p-2 shrink-0 space-y-2">
+        <div class="flex items-center justify-between px-1">
+            <div class="text-10 font-bold text-slate-400">
+                ACTIVE: <span id="active-field-label" class="text-blue-400">NONE</span>
+            </div>
+            <div class="flex space-x-1">
+                <button id="tab-num" onclick="switchKeypad('num')" class="px-2 py-1 text-10 font-bold rounded bg-blue-600 text-white cursor-pointer">123 NUM</button>
+                <button id="tab-alpha" onclick="switchKeypad('alpha')" class="px-2 py-1 text-10 font-bold rounded bg-slate-800 text-slate-400 border border-slate-700 cursor-pointer">A-Z ALPHA</button>
+            </div>
         </div>
-    </footer>
 
-    <!-- JavaScript Logic -->
+        <!-- NUMERIC KEYPAD -->
+        <div id="keypad-num" class="grid grid-cols-4 gap-1.5 hidden">
+            <button onclick="pressKey('7')" class="kb-btn bg-slate-900 border border-slate-800 hover:bg-slate-800 text-white font-bold py-2.5 rounded text-sm active:bg-slate-700">7</button>
+            <button onclick="pressKey('8')" class="kb-btn bg-slate-900 border border-slate-800 hover:bg-slate-800 text-white font-bold py-2.5 rounded text-sm active:bg-slate-700">8</button>
+            <button onclick="pressKey('9')" class="kb-btn bg-slate-900 border border-slate-800 hover:bg-slate-800 text-white font-bold py-2.5 rounded text-sm active:bg-slate-700">9</button>
+            <button onclick="pressKey('CLR')" class="kb-btn bg-red-950/80 border border-red-800 hover:bg-red-900 text-red-300 font-bold py-2.5 rounded text-xs active:bg-red-800">CLR</button>
+
+            <button onclick="pressKey('4')" class="kb-btn bg-slate-900 border border-slate-800 hover:bg-slate-800 text-white font-bold py-2.5 rounded text-sm active:bg-slate-700">4</button>
+            <button onclick="pressKey('5')" class="kb-btn bg-slate-900 border border-slate-800 hover:bg-slate-800 text-white font-bold py-2.5 rounded text-sm active:bg-slate-700">5</button>
+            <button onclick="pressKey('6')" class="kb-btn bg-slate-900 border border-slate-800 hover:bg-slate-800 text-white font-bold py-2.5 rounded text-sm active:bg-slate-700">6</button>
+            <button onclick="pressKey('BKSP')" class="kb-btn bg-slate-800 border border-slate-700 hover:bg-slate-700 text-amber-400 font-bold py-2.5 rounded text-xs active:bg-slate-600">⌫</button>
+
+            <button onclick="pressKey('1')" class="kb-btn bg-slate-900 border border-slate-800 hover:bg-slate-800 text-white font-bold py-2.5 rounded text-sm active:bg-slate-700">1</button>
+            <button onclick="pressKey('2')" class="kb-btn bg-slate-900 border border-slate-800 hover:bg-slate-800 text-white font-bold py-2.5 rounded text-sm active:bg-slate-700">2</button>
+            <button onclick="pressKey('3')" class="kb-btn bg-slate-900 border border-slate-800 hover:bg-slate-800 text-white font-bold py-2.5 rounded text-sm active:bg-slate-700">3</button>
+            <button onclick="pressKey('/')" class="kb-btn bg-slate-900 border border-slate-800 hover:bg-slate-800 text-cyan-400 font-bold py-2.5 rounded text-sm active:bg-slate-700">/</button>
+
+            <button onclick="pressKey('0')" class="kb-btn bg-slate-900 border border-slate-800 hover:bg-slate-800 text-white font-bold py-2.5 rounded text-sm active:bg-slate-700">0</button>
+            <button onclick="pressKey('.')" class="kb-btn bg-slate-900 border border-slate-800 hover:bg-slate-800 text-white font-bold py-2.5 rounded text-sm active:bg-slate-700">.</button>
+            <button onclick="pressKey('SP')" class="kb-btn bg-slate-900 border border-slate-800 hover:bg-slate-800 text-slate-400 font-bold py-2.5 rounded text-xs active:bg-slate-700">SP</button>
+            <button onclick="pressKey('NEXT')" class="kb-btn bg-blue-600 border border-blue-500 hover:bg-blue-500 text-white font-bold py-2.5 rounded text-xs active:bg-blue-700">NEXT</button>
+        </div>
+
+        <!-- ALPHA KEYPAD -->
+        <div id="keypad-alpha" class="grid grid-cols-7 gap-1 hidden">
+            <button onclick="pressKey('A')" class="kb-btn bg-slate-900 border border-slate-800 hover:bg-slate-800 text-white font-bold py-2 rounded text-xs">A</button>
+            <button onclick="pressKey('B')" class="kb-btn bg-slate-900 border border-slate-800 hover:bg-slate-800 text-white font-bold py-2 rounded text-xs">B</button>
+            <button onclick="pressKey('C')" class="kb-btn bg-slate-900 border border-slate-800 hover:bg-slate-800 text-white font-bold py-2 rounded text-xs">C</button>
+            <button onclick="pressKey('D')" class="kb-btn bg-slate-900 border border-slate-800 hover:bg-slate-800 text-white font-bold py-2 rounded text-xs">D</button>
+            <button onclick="pressKey('E')" class="kb-btn bg-slate-900 border border-slate-800 hover:bg-slate-800 text-white font-bold py-2 rounded text-xs">E</button>
+            <button onclick="pressKey('F')" class="kb-btn bg-slate-900 border border-slate-800 hover:bg-slate-800 text-white font-bold py-2 rounded text-xs">F</button>
+            <button onclick="pressKey('CLR')" class="kb-btn bg-red-950/80 border border-red-800 hover:bg-red-900 text-red-300 font-bold py-2 rounded text-10">CLR</button>
+
+            <button onclick="pressKey('G')" class="kb-btn bg-slate-900 border border-slate-800 hover:bg-slate-800 text-white font-bold py-2 rounded text-xs">G</button>
+            <button onclick="pressKey('H')" class="kb-btn bg-slate-900 border border-slate-800 hover:bg-slate-800 text-white font-bold py-2 rounded text-xs">H</button>
+            <button onclick="pressKey('I')" class="kb-btn bg-slate-900 border border-slate-800 hover:bg-slate-800 text-white font-bold py-2 rounded text-xs">I</button>
+            <button onclick="pressKey('J')" class="kb-btn bg-slate-900 border border-slate-800 hover:bg-slate-800 text-white font-bold py-2 rounded text-xs">J</button>
+            <button onclick="pressKey('K')" class="kb-btn bg-slate-900 border border-slate-800 hover:bg-slate-800 text-white font-bold py-2 rounded text-xs">K</button>
+            <button onclick="pressKey('L')" class="kb-btn bg-slate-900 border border-slate-800 hover:bg-slate-800 text-white font-bold py-2 rounded text-xs">L</button>
+            <button onclick="pressKey('BKSP')" class="kb-btn bg-slate-800 border border-slate-700 hover:bg-slate-700 text-amber-400 font-bold py-2 rounded text-10">⌫</button>
+
+            <button onclick="pressKey('M')" class="kb-btn bg-slate-900 border border-slate-800 hover:bg-slate-800 text-white font-bold py-2 rounded text-xs">M</button>
+            <button onclick="pressKey('N')" class="kb-btn bg-slate-900 border border-slate-800 hover:bg-slate-800 text-white font-bold py-2 rounded text-xs">N</button>
+            <button onclick="pressKey('O')" class="kb-btn bg-slate-900 border border-slate-800 hover:bg-slate-800 text-white font-bold py-2 rounded text-xs">O</button>
+            <button onclick="pressKey('P')" class="kb-btn bg-slate-900 border border-slate-800 hover:bg-slate-800 text-white font-bold py-2 rounded text-xs">P</button>
+            <button onclick="pressKey('Q')" class="kb-btn bg-slate-900 border border-slate-800 hover:bg-slate-800 text-white font-bold py-2 rounded text-xs">Q</button>
+            <button onclick="pressKey('R')" class="kb-btn bg-slate-900 border border-slate-800 hover:bg-slate-800 text-white font-bold py-2 rounded text-xs">R</button>
+            <button onclick="pressKey('/')" class="kb-btn bg-slate-900 border border-slate-800 hover:bg-slate-800 text-cyan-400 font-bold py-2 rounded text-xs">/</button>
+
+            <button onclick="pressKey('S')" class="kb-btn bg-slate-900 border border-slate-800 hover:bg-slate-800 text-white font-bold py-2 rounded text-xs">S</button>
+            <button onclick="pressKey('T')" class="kb-btn bg-slate-900 border border-slate-800 hover:bg-slate-800 text-white font-bold py-2 rounded text-xs">T</button>
+            <button onclick="pressKey('U')" class="kb-btn bg-slate-900 border border-slate-800 hover:bg-slate-800 text-white font-bold py-2 rounded text-xs">U</button>
+            <button onclick="pressKey('V')" class="kb-btn bg-slate-900 border border-slate-800 hover:bg-slate-800 text-white font-bold py-2 rounded text-xs">V</button>
+            <button onclick="pressKey('W')" class="kb-btn bg-slate-900 border border-slate-800 hover:bg-slate-800 text-white font-bold py-2 rounded text-xs">W</button>
+            <button onclick="pressKey('X')" class="kb-btn bg-slate-900 border border-slate-800 hover:bg-slate-800 text-white font-bold py-2 rounded text-xs">X</button>
+            <button onclick="pressKey('SP')" class="kb-btn bg-slate-900 border border-slate-800 hover:bg-slate-800 text-slate-400 font-bold py-2 rounded text-10">SP</button>
+
+            <button onclick="pressKey('Y')" class="kb-btn bg-slate-900 border border-slate-800 hover:bg-slate-800 text-white font-bold py-2 rounded text-xs col-span-2">Y</button>
+            <button onclick="pressKey('Z')" class="kb-btn bg-slate-900 border border-slate-800 hover:bg-slate-800 text-white font-bold py-2 rounded text-xs col-span-2">Z</button>
+            <button onclick="pressKey('NEXT')" class="kb-btn bg-blue-600 border border-blue-500 hover:bg-blue-500 text-white font-bold py-2 rounded text-10 col-span-3">NEXT</button>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT LOGIC -->
     <script>
-        // State Management
         let currentSection = 'crew';
-        let activeInputId = '';
         let currentMode = 'alpha';
+        let activeInputId = '';
+        let isDstActive = localStorage.getItem('kneeboard_dst_enabled') === 'true';
 
-        // UTC Clock
-        function updateClock() {
-            const now = new Date();
-            const h = String(now.getUTCHours()).padStart(2, '0');
-            const m = String(now.getUTCMinutes()).padStart(2, '0');
-            const s = String(now.getUTCSeconds()).padStart(2, '0');
-            document.getElementById('utc-clock').innerText = `${h}:${m}:${s} Z`;
+        const inputSequences = {
+            crew: [
+                'pic-emp', 'pic-name',
+                'cp-emp', 'cp-name',
+                'r1-emp', 'r1-name',
+                'r2-emp', 'r2-name',
+                'r3-emp', 'r3-name',
+                'r4-emp', 'r4-name',
+                'r5-emp', 'r5-name',
+                'r6-emp', 'r6-name'
+            ],
+            inop: [], 
+            chk: [],
+            fuel: ['fuel-ro', 'fuel-used', 'fuel-act'],
+            jett: ['jett-fob', 'jett-feed-tk']
+        };
+
+        function getPreferredModeById(id) {
+            if (!id) return 'alpha';
+            const lowerId = id.toLowerCase();
+            if (
+                lowerId.includes('emp') || 
+                lowerId.includes('fuel') || 
+                lowerId.includes('jett') ||
+                lowerId.includes('-ro') ||
+                lowerId.includes('-used') ||
+                lowerId.includes('-act') ||
+                lowerId.includes('-fob')
+            ) {
+                return 'num';
+            }
+            return 'alpha';
         }
-        setInterval(updateClock, 1000);
-        updateClock();
 
-        // Prevent Documents / Viewer Fullscreen Touch Toggle Event Bubble
-        document.body.addEventListener('touchstart', function(e) {
-            if (e.target.tagName === 'BUTTON' || e.target.classList.contains('kb-input') || e.target.classList.contains('accordion-header')) {
-                e.stopPropagation();
+        function initDSTUI() {
+            const btn = document.getElementById('dst-btn');
+            const icon = document.getElementById('dst-icon');
+            const label = document.getElementById('dst-label');
+
+            if (isDstActive) {
+                btn.className = 'flex items-center justify-center px-2 py-1 rounded border border-amber-500 bg-amber-950/50 hover:bg-amber-900/50 transition-colors';
+                icon.className = 'text-xs select-none text-amber-400';
+                label.innerText = 'DST ON';
+                label.className = 'text-10 font-bold ml-1.5 text-amber-400';
+            } else {
+                btn.className = 'flex items-center justify-center px-2 py-1 rounded border border-slate-700 bg-slate-900 hover:bg-slate-800 transition-colors';
+                icon.className = 'text-xs select-none text-slate-400';
+                label.innerText = 'DST OFF';
+                label.className = 'text-10 font-bold ml-1.5 text-slate-400';
             }
-        }, { passive: false });
+            updateClocks();
+        }
 
-        // Initialize Dynamic Table Rows & Inputs on Load
+        function toggleDST() {
+            isDstActive = !isDstActive;
+            localStorage.setItem('kneeboard_dst_enabled', isDstActive);
+            initDSTUI();
+        }
+
+        function updateClocks() {
+            const now = new Date();
+            const dstOffset = isDstActive ? 1 : 0; 
+
+            const utcHours = String(now.getUTCHours()).padStart(2, '0');
+            const utcMins = String(now.getUTCMinutes()).padStart(2, '0');
+            const utcSecs = String(now.getUTCSeconds()).padStart(2, '0');
+            document.getElementById('clock-utc').innerText = `${utcHours}:${utcMins}:${utcSecs}`;
+
+            const pstDate = new Date(now.getTime() + ((-8 + dstOffset) * 3600 * 1000));
+            const pstHours = String(pstDate.getUTCHours()).padStart(2, '0');
+            const pstMins = String(pstDate.getUTCMinutes()).padStart(2, '0');
+            const pstSecs = String(pstDate.getUTCSeconds()).padStart(2, '0');
+            document.getElementById('clock-pst').innerText = `${pstHours}:${pstMins}:${pstSecs}`;
+
+            const estDate = new Date(now.getTime() + ((-5 + dstOffset) * 3600 * 1000));
+            const estHours = String(estDate.getUTCHours()).padStart(2, '0');
+            const estMins = String(estDate.getUTCMinutes()).padStart(2, '0');
+            const estSecs = String(estDate.getUTCSeconds()).padStart(2, '0');
+            document.getElementById('clock-est').innerText = `${estHours}:${estMins}:${estSecs}`;
+        }
+
         function initFormRows() {
-            // 1) CREW LIST (8 Rows with 70:30 fixed ratio)
-            const crewBody = document.getElementById('crew-rows');
-            crewBody.innerHTML = '';
-            for (let i = 1; i <= 8; i++) {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td style="padding: 2px;">
-                        <div id="crew-emp-${i}" onclick="setActiveInput('crew-emp-${i}', 'num')" class="kb-input bg-slate-950 border border-slate-700 rounded px-2 text-amber-400 font-bold overflow-hidden"></div>
-                    </td>
-                    <td style="padding: 2px;">
-                        <div id="crew-code-${i}" onclick="setActiveInput('crew-code-${i}', 'alpha')" class="kb-input bg-slate-950 border border-slate-700 rounded px-2 text-cyan-400 font-bold overflow-hidden"></div>
-                    </td>
-                `;
-                crewBody.appendChild(tr);
-            }
-
-            // 2) INOP STATION (8 DEP, 8 DEST)
             const depInopContainer = document.getElementById('dep-inop-rows');
             const destInopContainer = document.getElementById('dest-inop-rows');
-            depInopContainer.innerHTML = '';
-            destInopContainer.innerHTML = '';
+            
+            if (depInopContainer) depInopContainer.innerHTML = '';
+            if (destInopContainer) destInopContainer.innerHTML = '';
+            
+            inputSequences.inop = [];
 
             for (let i = 1; i <= 8; i++) {
-                depInopContainer.innerHTML += `
-                    <div id="inop-dep-${i}" onclick="setActiveInput('inop-dep-${i}', 'alpha')" class="kb-input bg-slate-950 border border-slate-700 rounded px-2 text-slate-200 overflow-hidden"></div>
-                `;
-                destInopContainer.innerHTML += `
-                    <div id="inop-dest-${i}" onclick="setActiveInput('inop-dest-${i}', 'alpha')" class="kb-input bg-slate-950 border border-slate-700 rounded px-2 text-slate-200 overflow-hidden"></div>
-                `;
+                if (depInopContainer) {
+                    depInopContainer.innerHTML += `
+                        <div id="inop-dep-${i}" onclick="setActiveInput('inop-dep-${i}', 'alpha')" class="kb-input bg-slate-950 border border-slate-800 rounded px-2 text-amber-400 font-bold overflow-hidden h-7 flex items-center text-xs"></div>
+                    `;
+                }
+                inputSequences.inop.push(`inop-dep-${i}`);
             }
 
-            // Set Initial Active Input Field
-            setActiveInput('crew-emp-1', 'num');
+            for (let i = 1; i <= 8; i++) {
+                if (destInopContainer) {
+                    destInopContainer.innerHTML += `
+                        <div id="inop-dest-${i}" onclick="setActiveInput('inop-dest-${i}', 'alpha')" class="kb-input bg-slate-950 border border-slate-800 rounded px-2 text-cyan-400 font-bold overflow-hidden h-7 flex items-center text-xs"></div>
+                    `;
+                }
+                inputSequences.inop.push(`inop-dest-${i}`);
+            }
         }
 
-        // Tab Section Switcher
         function switchSection(sec) {
-            // Check if leaving JETT section to restore default FEED TK if empty
-            checkJettBlur();
-
             currentSection = sec;
             const sections = ['crew', 'inop', 'chk', 'fuel', 'jett'];
             
             sections.forEach(s => {
-                const tabEl = document.getElementById(`tab-${s}`);
                 const secEl = document.getElementById(`sec-${s}`);
+                const tabEl = document.getElementById(`tab-${s}`);
                 
-                if (s === sec) {
-                    secEl.classList.remove('hidden');
-                    tabEl.className = "flex-1 py-1-5 px-1 text-center font-bold text-10 border-b-2 border-blue-600 text-blue-400";
-                } else {
-                    secEl.classList.add('hidden');
-                    tabEl.className = "flex-1 py-1-5 px-1 text-center font-bold text-10 text-slate-400";
+                if (secEl && tabEl) {
+                    if (s === sec) {
+                        secEl.classList.remove('hidden');
+                        tabEl.className = 'flex-1 py-1-5 px-1 text-center font-bold text-10 border-b-2 border-blue-600 text-blue-400 cursor-pointer';
+                    } else {
+                        secEl.classList.add('hidden');
+                        tabEl.className = 'flex-1 py-1-5 px-1 text-center font-bold text-10 text-slate-400 cursor-pointer';
+                    }
                 }
             });
 
-            // Set default input focus per section
-            if (sec === 'crew') setActiveInput('crew-emp-1', 'num');
-            if (sec === 'inop') setActiveInput('inop-dep-1', 'alpha');
-            if (sec === 'fuel') setActiveInput('fuel-ro', 'num');
-            if (sec === 'jett') setActiveInput('jett-fob', 'num');
-            if (sec === 'chk') {
-                document.querySelectorAll('.kb-input').forEach(el => el.classList.remove('input-active'));
-                activeInputId = '';
-                document.getElementById('active-field-label').innerText = 'NONE';
-            }
-        }
-
-        // Accordion Dropdown Handler for Checklists
-        function toggleAccordion(id) {
-            const content = document.getElementById(id);
-            const arrow = document.getElementById(`${id}-arrow`);
-            
-            if (content.classList.contains('hidden')) {
-                content.classList.remove('hidden');
-                arrow.innerText = '▼';
+            const seq = inputSequences[sec];
+            if (seq && seq.length > 0) {
+                const firstInput = seq[0];
+                setActiveInput(firstInput, getPreferredModeById(firstInput));
             } else {
-                content.classList.add('hidden');
-                arrow.innerText = '►';
+                clearActiveInputHighlight();
+                activeInputId = '';
+                const activeLabel = document.getElementById('active-field-label');
+                if (activeLabel) activeLabel.innerText = 'NONE';
             }
         }
 
-        // Set Active Field & Preferred Keypad Mode
-        function setActiveInput(id, preferredMode = 'alpha') {
-            // Check Jett default blur behavior when moving away from jett-feed-tk
-            if (activeInputId === 'jett-feed-tk' && id !== 'jett-feed-tk') {
-                checkJettBlur();
-            }
-
-            document.querySelectorAll('.kb-input').forEach(el => el.classList.remove('input-active'));
-            const target = document.getElementById(id);
-            if (!target) return;
-
-            target.classList.add('input-active');
+        function setActiveInput(id, preferredMode) {
+            clearActiveInputHighlight();
             activeInputId = id;
-
-            document.getElementById('active-field-label').innerText = id.toUpperCase().replace(/-/g, ' ');
-            switchKeypad(preferredMode);
-        }
-
-        // Jett specific input click handler (Clears 190000 on focus)
-        function setJettDefaultInput(id, defaultValue) {
-            setActiveInput(id, 'num');
+            
             const el = document.getElementById(id);
-            if (el.innerText.trim() === defaultValue) {
-                el.innerText = '';
+            if (el) {
+                el.classList.add('input-active');
             }
+            
+            const activeLabel = document.getElementById('active-field-label');
+            if (activeLabel) {
+                activeLabel.innerText = id.toUpperCase().replace(/-/g, ' ');
+            }
+
+            const mode = preferredMode || getPreferredModeById(id);
+            switchKeypad(mode);
         }
 
-        // Check if FEED TK is empty when losing focus, and restore default 190000
-        function checkJettBlur() {
-            const feedTkEl = document.getElementById('jett-feed-tk');
-            if (feedTkEl && feedTkEl.innerText.trim() === '') {
-                feedTkEl.innerText = '190000';
-                calculateJett();
+        function setJettDefaultInput(id, defaultVal) {
+            const el = document.getElementById(id);
+            if (el && !el.innerText.trim()) {
+                el.innerText = defaultVal;
+                calculateJettison();
             }
+            setActiveInput(id, 'num');
         }
 
-        // Toggle NUM and ALPHA Keypads
+        function clearActiveInputHighlight() {
+            document.querySelectorAll('.kb-input').forEach(el => {
+                el.classList.remove('input-active');
+            });
+        }
+
         function switchKeypad(mode) {
             currentMode = mode;
-            const numPad = document.getElementById('keypad-num');
-            const alphaPad = document.getElementById('keypad-alpha');
+            const numKp = document.getElementById('keypad-num');
+            const alphaKp = document.getElementById('keypad-alpha');
             const tabNum = document.getElementById('tab-num');
             const tabAlpha = document.getElementById('tab-alpha');
 
             if (mode === 'num') {
-                numPad.classList.remove('hidden');
-                alphaPad.classList.add('hidden');
-                tabNum.className = "px-2 py-1 text-10 font-bold rounded bg-blue-600 text-white";
-                tabAlpha.className = "px-2 py-1 text-10 font-bold rounded bg-slate-800 text-slate-400 border border-slate-700";
+                if (numKp) numKp.classList.remove('hidden');
+                if (alphaKp) alphaKp.classList.add('hidden');
+                if (tabNum) tabNum.className = 'px-2 py-1 text-10 font-bold rounded bg-blue-600 text-white cursor-pointer';
+                if (tabAlpha) tabAlpha.className = 'px-2 py-1 text-10 font-bold rounded bg-slate-800 text-slate-400 border border-slate-700 cursor-pointer';
             } else {
-                numPad.classList.add('hidden');
-                alphaPad.classList.remove('hidden');
-                tabAlpha.className = "px-2 py-1 text-10 font-bold rounded bg-blue-600 text-white";
-                tabNum.className = "px-2 py-1 text-10 font-bold rounded bg-slate-800 text-slate-400 border border-slate-700";
+                if (alphaKp) alphaKp.classList.remove('hidden');
+                if (numKp) numKp.classList.add('hidden');
+                if (tabAlpha) tabAlpha.className = 'px-2 py-1 text-10 font-bold rounded bg-blue-600 text-white cursor-pointer';
+                if (tabNum) tabNum.className = 'px-2 py-1 text-10 font-bold rounded bg-slate-800 text-slate-400 border border-slate-700 cursor-pointer';
             }
         }
 
-        // Key Press Handler & Calculation Triggers
         function pressKey(key) {
             if (!activeInputId) return;
             const target = document.getElementById(activeInputId);
             if (!target) return;
 
-            let val = target.innerText;
+            let currentText = target.innerText;
 
             if (key === 'CLR') {
                 target.innerText = '';
             } else if (key === 'BKSP') {
-                target.innerText = val.slice(0, -1);
+                target.innerText = currentText.slice(0, -1);
             } else if (key === 'SP') {
-                target.innerText = val + ' ';
+                target.innerText += ' ';
             } else if (key === 'NEXT') {
-                focusNextInput();
+                moveToNextInput();
+                return;
             } else {
-                target.innerText = val + key;
+                target.innerText += key;
             }
 
-            // Real-time calculation hooks
-            if (activeInputId.startsWith('fuel-')) {
+            if (currentSection === 'fuel') {
                 calculateFuelDifference();
-            } else if (activeInputId.startsWith('jett-')) {
-                calculateJett();
+            } else if (currentSection === 'jett') {
+                calculateJettison();
             }
         }
 
-        // Fuel Difference Calculation Formula
+        function moveToNextInput() {
+            const seq = inputSequences[currentSection];
+            if (!seq || seq.length === 0) return;
+
+            const idx = seq.indexOf(activeInputId);
+            if (idx !== -1 && idx < seq.length - 1) {
+                const nextId = seq[idx + 1];
+                setActiveInput(nextId, getPreferredModeById(nextId));
+            } else if (seq.length > 0) {
+                const firstId = seq[0];
+                setActiveInput(firstId, getPreferredModeById(firstId));
+            }
+        }
+
+        function clearCurrentSection() {
+            const seq = inputSequences[currentSection];
+            if (seq && seq.length > 0) {
+                seq.forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.innerText = '';
+                });
+            }
+
+            if (currentSection === 'fuel') {
+                const diffEl = document.getElementById('fuel-diff');
+                if (diffEl) {
+                    diffEl.innerText = '---';
+                    diffEl.className = 'text-base font-bold text-slate-100 px-2 text-right flex-1';
+                }
+            } else if (currentSection === 'jett') {
+                const jettFeedEl = document.getElementById('jett-feed-tk');
+                const jettExpEl = document.getElementById('jett-exp');
+                const jettMinEl = document.getElementById('jett-min');
+                
+                if (jettFeedEl) jettFeedEl.innerText = '190000';
+                if (jettExpEl) jettExpEl.innerText = '---';
+                if (jettMinEl) jettMinEl.innerText = '---';
+            }
+
+            if (seq && seq.length > 0) {
+                const firstId = seq[0];
+                setActiveInput(firstId, getPreferredModeById(firstId));
+            }
+        }
+
+        function toggleAccordion(id) {
+            const content = document.getElementById(id);
+            const arrow = document.getElementById(`${id}-arrow`);
+            if (!content) return;
+
+            if (content.classList.contains('hidden')) {
+                content.classList.remove('hidden');
+                if (arrow) arrow.innerText = '▼';
+            } else {
+                content.classList.add('hidden');
+                if (arrow) arrow.innerText = '►';
+            }
+        }
+
         function calculateFuelDifference() {
-            const ro = parseFloat(document.getElementById('fuel-ro').innerText) || 0;
-            const used = parseFloat(document.getElementById('fuel-used').innerText) || 0;
-            const act = parseFloat(document.getElementById('fuel-act').innerText) || 0;
-            
+            const roVal = parseFloat(document.getElementById('fuel-ro')?.innerText.trim());
+            const usedVal = parseFloat(document.getElementById('fuel-used')?.innerText.trim());
+            const actVal = parseFloat(document.getElementById('fuel-act')?.innerText.trim());
             const diffEl = document.getElementById('fuel-diff');
 
-            if (document.getElementById('fuel-ro').innerText === '' || document.getElementById('fuel-used').innerText === '' || document.getElementById('fuel-act').innerText === '') {
-                diffEl.innerText = '---';
-                diffEl.className = "text-base font-bold text-slate-100 px-2 text-right flex-1";
-                return;
-            }
+            if (!diffEl) return;
 
-            const planRemaining = ro - used;
-            const diff = act - planRemaining;
+            if (!isNaN(roVal) && !isNaN(usedVal) && !isNaN(actVal)) {
+                const planVal = roVal - usedVal;
+                const diff = actVal - planVal;
 
-            const sign = diff > 0 ? '+' : '';
-            diffEl.innerText = `${sign}${diff.toFixed(1)}`;
-
-            if (diff > 0) {
-                diffEl.className = "text-base font-bold text-emerald-400 px-2 text-right flex-1";
-            } else if (diff < 0) {
-                diffEl.className = "text-base font-bold text-red-300 px-2 text-right flex-1";
+                if (diff > 0) {
+                    diffEl.innerText = `+${diff.toLocaleString()}`;
+                    diffEl.className = 'text-base font-bold text-emerald-400 px-2 text-right flex-1';
+                } else if (diff < 0) {
+                    diffEl.innerText = `${diff.toLocaleString()}`;
+                    diffEl.className = 'text-base font-bold text-red-400 px-2 text-right flex-1';
+                } else {
+                    diffEl.innerText = '0';
+                    diffEl.className = 'text-base font-bold text-slate-100 px-2 text-right flex-1';
+                }
             } else {
-                diffEl.className = "text-base font-bold text-slate-100 px-2 text-right flex-1";
+                diffEl.innerText = '---';
+                diffEl.className = 'text-base font-bold text-slate-100 px-2 text-right flex-1';
             }
         }
 
-        // Jettison Fuel Calculation Formula
-        function calculateJett() {
-            const fobText = document.getElementById('jett-fob').innerText.trim();
-            const feedTkText = document.getElementById('jett-feed-tk').innerText.trim() || '190000';
-
-            const fob = parseFloat(fobText);
-            const feedTk = parseFloat(feedTkText);
-
+        function calculateJettison() {
+            const fobVal = parseFloat(document.getElementById('jett-fob')?.innerText.trim());
+            const feedVal = parseFloat(document.getElementById('jett-feed-tk')?.innerText.trim() || '190000');
             const expEl = document.getElementById('jett-exp');
             const minEl = document.getElementById('jett-min');
 
-            if (isNaN(fob)) {
+            if (!expEl || !minEl) return;
+
+            if (!isNaN(fobVal) && !isNaN(feedVal)) {
+                const expLb = fobVal - feedVal;
+                expEl.innerText = expLb > 0 ? expLb.toLocaleString() : '0';
+
+                if (expLb > 0) {
+                    const min = Math.ceil(expLb / 5600);
+                    minEl.innerText = `${min} MIN`;
+                } else {
+                    minEl.innerText = '0 MIN';
+                }
+            } else {
                 expEl.innerText = '---';
                 minEl.innerText = '---';
-                return;
-            }
-
-            // EXP LB = FOB - SUM OF FEED TK
-            const exp = fob - feedTk;
-            expEl.innerText = exp;
-
-            // MIN = CEIL(EXP LB / 5500)
-            if (exp <= 0) {
-                minEl.innerText = '0';
-            } else {
-                const minVal = Math.ceil(exp / 5500);
-                minEl.innerText = minVal.toLocaleString();
             }
         }
 
-        // Auto Advance to Next Input Field
-        function focusNextInput() {
-            if (!activeInputId) return;
-            
-            if (currentSection === 'crew') {
-                const parts = activeInputId.split('-');
-                let type = parts[1]; // emp or code
-                let idx = parseInt(parts[2]);
-
-                if (type === 'emp') {
-                    setActiveInput(`crew-code-${idx}`, 'alpha');
-                } else {
-                    if (idx < 8) {
-                        setActiveInput(`crew-emp-${idx + 1}`, 'num');
-                    }
-                }
-            } else if (currentSection === 'inop') {
-                const parts = activeInputId.split('-');
-                let loc = parts[1]; // dep or dest
-                let idx = parseInt(parts[2]);
-
-                if (idx < 8) {
-                    setActiveInput(`inop-${loc}-${idx + 1}`, 'alpha');
-                } else if (loc === 'dep') {
-                    setActiveInput('inop-dest-1', 'alpha');
-                }
-            } else if (currentSection === 'fuel') {
-                if (activeInputId === 'fuel-ro') setActiveInput('fuel-used', 'num');
-                else if (activeInputId === 'fuel-used') setActiveInput('fuel-act', 'num');
-            } else if (currentSection === 'jett') {
-                if (activeInputId === 'jett-fob') setActiveInput('jett-feed-tk', 'num');
-            }
-        }
-
-        // Clear Current Section Inputs
-        function clearCurrentSection() {
-            if (currentSection === 'crew' || currentSection === 'inop' || currentSection === 'fuel' || currentSection === 'jett') {
-                if (currentSection === 'fuel') {
-                    document.querySelectorAll(`#sec-fuel .kb-input`).forEach(el => { el.innerText = ''; });
-                    setActiveInput('fuel-ro', 'num');
-                    document.getElementById('fuel-diff').innerText = '---';
-                    document.getElementById('fuel-diff').className = "text-base font-bold text-slate-100 px-2 text-right flex-1";
-                } else if (currentSection === 'jett') {
-                    document.getElementById('jett-fob').innerText = '';
-                    document.getElementById('jett-feed-tk').innerText = '190000';
-                    setActiveInput('jett-fob', 'num');
-                    calculateJett();
-                } else {
-                    document.querySelectorAll(`#sec-${currentSection} .kb-input`).forEach(el => {
-                        el.innerText = '';
-                    });
-                    if (currentSection === 'crew') setActiveInput('crew-emp-1', 'num');
-                    if (currentSection === 'inop') setActiveInput('inop-dep-1', 'alpha');
-                }
-            }
-        }
-
-        // Run Initialization on Load
-        window.onload = function() {
+        window.addEventListener('DOMContentLoaded', () => {
             initFormRows();
-        };
+            switchSection('crew');
+            initDSTUI();
+            
+            updateClocks();
+            setInterval(updateClocks, 1000);
+        });
     </script>
 </body>
 </html>
