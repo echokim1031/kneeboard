@@ -9,10 +9,17 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         /* 2. 더블 탭 줌 방지 (touch-action) 및 터치 강조 색상 제거 */
-        html, body, div, button {
-            touch-action: manipulation;
-            -webkit-tap-highlight-color: transparent;
-        }
+       html, body {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+}
+
+button, .kb-input, .accordion-header {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-user-select: none;
+    user-select: none;
+}
 
         .text-10 { font-size: 10px; line-height: 12px; }
         .py-1-5 { padding-top: 0.375rem; padding-bottom: 0.375rem; }
@@ -357,15 +364,18 @@
         let activeInputId = '';
         let isDstActive = localStorage.getItem('kneeboard_dst_enabled') === 'true';
 
-        // 3. iOS 사파리 더블 탭 줌 제스처 강제 차단
-        let lastTouchEnd = 0;
-        document.addEventListener('touchend', function (event) {
-            const now = (new Date()).getTime();
-            if (now - lastTouchEnd <= 300) {
-                event.preventDefault();
-            }
-            lastTouchEnd = now;
-        }, false);
+// iOS Safari double-tap zoom prevention
+let lastTouchEnd = 0;
+
+document.addEventListener('touchend', function (event) {
+    const now = Date.now();
+
+    if (now - lastTouchEnd <= 350) {
+        event.preventDefault();
+    }
+
+    lastTouchEnd = now;
+}, { passive: false });
 
         const inputSequences = {
             crew: [
