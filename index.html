@@ -211,7 +211,7 @@ button, .kb-input, .accordion-header {
                 </div>
             </div>
 
-            <!-- Checklist 3: LANDING PREP CHK LIST -->
+ <!-- Checklist 3: LANDING PREP CHK LIST -->
             <div>
                 <div onclick="toggleAccordion('chk-3')" class="accordion-header">
                     <span>3. LANDING PREP CHK LIST</span>
@@ -226,8 +226,28 @@ button, .kb-input, .accordion-header {
                         <div class="flex items-start"><span class="text-blue-400 mr-2">4.</span><span>STATUS CHK</span></div>
                         <div class="flex items-start"><span class="text-blue-400 mr-2">5.</span><span>SYNCRO ECAM</span></div>
                         <div class="flex items-start"><span class="text-blue-400 mr-2">6.</span><span>LANDING PERF COMPUTE (BOTH)</span></div>
-                        <div class="flex items-start"><span class="text-blue-400 mr-2">7.</span><span>FMS SET</span></div>
-                        <div class="flex items-start"><span class="text-blue-400 mr-2">8.</span><span>AUTO BRK SET</span></div>
+                        
+                        <!-- 7. FMS SET (초록색 강조 + 클릭 시 하부 서브 체크리스트 토글) -->
+                        <div class="mt-1 pt-1 border-t border-slate-800/60">
+                            <div onclick="toggleAccordion('chk-fms-sub')" class="flex items-center justify-between text-emerald-400 font-bold cursor-pointer hover:text-emerald-300 py-0.5 px-1 rounded bg-emerald-950/30 border border-emerald-800/40">
+                                <div class="flex items-center">
+                                    <span class="mr-2">7.</span>
+                                    <span>FMS SET</span>
+                                </div>
+                                <span id="chk-fms-sub-arrow" class="text-xs">►</span>
+                            </div>
+                            
+                            <!-- FMS SET 하부 체크리스트 영역 -->
+                            <div id="chk-fms-sub" class="accordion-content hidden ml-4 mt-1.5 pl-2 border-l-2 border-emerald-500/50 space-y-1 text-emerald-300/90 text-xs">
+                                <div class="flex items-start"><span class="text-emerald-400 mr-2">*</span><span>F- PLN (STAR - APP - G/A)</span></div>
+                                <div class="flex items-start"><span class="text-emerald-400 mr-2">*</span><span>PERF (DES - APPR)</span></div>
+                                <div class="flex items-start"><span class="text-emerald-400 mr-2">*</span><span>POSITION MONITOR</span></div>
+                                <div class="flex items-start"><span class="text-emerald-400 mr-2">*</span><span>NAVAID</span></div>
+                                <div class="flex items-start"><span class="text-emerald-400 mr-2">*</span><span>SEC PLN</span></div>
+                            </div>
+                        </div>
+
+                        <div class="flex items-start pt-1"><span class="text-blue-400 mr-2">8.</span><span>AUTO BRK SET</span></div>
                     </div>
                 </div>
             </div>
