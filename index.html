@@ -42,6 +42,20 @@ button, .kb-input, .accordion-header {
             -webkit-user-select: none;
         }
 
+        /* Quick Status Buttons */
+        .status-btn {
+            user-select: none;
+            -webkit-user-select: none;
+            transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+        }
+
+        .status-btn.status-on {
+            background-color: #052e16 !important;
+            border-color: #16a34a !important;
+            color: #4ade80 !important;
+            box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.15);
+        }
+
         /* Accordion Header Style */
         .accordion-header {
             background-color: #0f172a;
@@ -74,14 +88,14 @@ button, .kb-input, .accordion-header {
             </button>
         </div>
 
-        <!-- Right: Timers (UTC / PST / EST) & CLR SEC Button -->
+        <!-- Right: Timers (UTC / LAX / JFK) & CLR SEC Button -->
         <div class="flex items-center space-x-2">
             <div class="flex items-center space-x-2 bg-slate-900 px-2.5 py-1 rounded border border-slate-800 text-10 font-mono font-bold">
                 <span class="text-amber-400">UTC <span id="clock-utc">00:00:00</span></span>
                 <span class="text-slate-700">|</span>
-                <span class="text-cyan-400">PST <span id="clock-pst">00:00:00</span></span>
+                <span class="text-cyan-400">LAX <span id="clock-lax">00:00:00</span></span>
                 <span class="text-slate-700">|</span>
-                <span class="text-emerald-400">EST <span id="clock-est">00:00:00</span></span>
+                <span class="text-emerald-400">JFK <span id="clock-jfk">00:00:00</span></span>
             </div>
 
             <button onclick="clearCurrentSection()" class="px-2.5 py-1 bg-red-950/80 hover:bg-red-900 text-red-400 border border-red-700/80 rounded text-10 font-bold tracking-wider transition-colors">
@@ -239,7 +253,7 @@ button, .kb-input, .accordion-header {
                             
                             <!-- FMS SET 하부 체크리스트 영역 -->
                             <div id="chk-fms-sub" class="accordion-content hidden ml-4 mt-1.5 pl-2 border-l-2 border-emerald-500/50 space-y-1 text-emerald-300/90 text-xs">
-                                <div class="flex items-start"><span class="text-emerald-400 mr-2">*</span><span>F- PLN (STAR - APP - G/A)</span></div>
+                                <div class="flex items-start"><span class="text-emerald-400 mr-2">*</span><span>F-PLN (STAR - APP - G/A)</span></div>
                                 <div class="flex items-start"><span class="text-emerald-400 mr-2">*</span><span>PERF (DES - APPR)</span></div>
                                 <div class="flex items-start"><span class="text-emerald-400 mr-2">*</span><span>POSITION MONITOR</span></div>
                                 <div class="flex items-start"><span class="text-emerald-400 mr-2">*</span><span>NAVAID</span></div>
@@ -304,6 +318,14 @@ button, .kb-input, .accordion-header {
 
     <!-- 4. BOTTOM VIRTUAL KEYPAD & STATUS BAR -->
     <div class="bg-slate-950 border-t border-slate-800 p-2 shrink-0 space-y-2">
+        <!-- QUICK STATUS BAR -->
+        <div class="grid grid-cols-4 gap-1.5 px-1">
+            <button id="status-loadsheet" onclick="toggleStatus('loadsheet')" class="status-btn bg-slate-900 border border-slate-800 text-slate-500 rounded py-1.5 text-10 font-bold tracking-wide">LOADSHEET</button>
+            <button id="status-clearance" onclick="toggleStatus('clearance')" class="status-btn bg-slate-900 border border-slate-800 text-slate-500 rounded py-1.5 text-10 font-bold tracking-wide">CLEARANCE</button>
+            <button id="status-cabin" onclick="toggleStatus('cabin')" class="status-btn bg-slate-900 border border-slate-800 text-slate-500 rounded py-1.5 text-10 font-bold tracking-wide">CABIN</button>
+            <button id="status-ground" onclick="toggleStatus('ground')" class="status-btn bg-slate-900 border border-slate-800 text-slate-500 rounded py-1.5 text-10 font-bold tracking-wide">GROUND</button>
+        </div>
+
         <div class="flex items-center justify-between px-1">
             <div class="text-10 font-bold text-slate-400">
                 ACTIVE: <span id="active-field-label" class="text-blue-400">NONE</span>
@@ -465,17 +487,43 @@ document.addEventListener('touchend', function (event) {
             const utcSecs = String(now.getUTCSeconds()).padStart(2, '0');
             document.getElementById('clock-utc').innerText = `${utcHours}:${utcMins}:${utcSecs}`;
 
-            const pstDate = new Date(now.getTime() + ((-8 + dstOffset) * 3600 * 1000));
-            const pstHours = String(pstDate.getUTCHours()).padStart(2, '0');
-            const pstMins = String(pstDate.getUTCMinutes()).padStart(2, '0');
-            const pstSecs = String(pstDate.getUTCSeconds()).padStart(2, '0');
-            document.getElementById('clock-pst').innerText = `${pstHours}:${pstMins}:${pstSecs}`;
+            // LAX: UTC-8, manually add 1 hour when DST is ON
+            const laxDate = new Date(now.getTime() + ((-8 + dstOffset) * 3600 * 1000));
+            const laxHours = String(laxDate.getUTCHours()).padStart(2, '0');
+            const laxMins = String(laxDate.getUTCMinutes()).padStart(2, '0');
+            const laxSecs = String(laxDate.getUTCSeconds()).padStart(2, '0');
+            document.getElementById('clock-lax').innerText = `${laxHours}:${laxMins}:${laxSecs}`;
 
-            const estDate = new Date(now.getTime() + ((-5 + dstOffset) * 3600 * 1000));
-            const estHours = String(estDate.getUTCHours()).padStart(2, '0');
-            const estMins = String(estDate.getUTCMinutes()).padStart(2, '0');
-            const estSecs = String(estDate.getUTCSeconds()).padStart(2, '0');
-            document.getElementById('clock-est').innerText = `${estHours}:${estMins}:${estSecs}`;
+            // JFK: UTC-5, manually add 1 hour when DST is ON
+            const jfkDate = new Date(now.getTime() + ((-5 + dstOffset) * 3600 * 1000));
+            const jfkHours = String(jfkDate.getUTCHours()).padStart(2, '0');
+            const jfkMins = String(jfkDate.getUTCMinutes()).padStart(2, '0');
+            const jfkSecs = String(jfkDate.getUTCSeconds()).padStart(2, '0');
+            document.getElementById('clock-jfk').innerText = `${jfkHours}:${jfkMins}:${jfkSecs}`;
+        }
+
+        // Quick status buttons: each item toggles independently and persists locally.
+        const statusItems = ['loadsheet', 'clearance', 'cabin', 'ground'];
+        const statusState = {};
+
+        function initStatusBar() {
+            statusItems.forEach(item => {
+                statusState[item] = localStorage.getItem(`kneeboard_status_${item}`) === 'true';
+                updateStatusButton(item);
+            });
+        }
+
+        function updateStatusButton(item) {
+            const btn = document.getElementById(`status-${item}`);
+            if (!btn) return;
+            btn.classList.toggle('status-on', !!statusState[item]);
+        }
+
+        function toggleStatus(item) {
+            if (!statusItems.includes(item)) return;
+            statusState[item] = !statusState[item];
+            localStorage.setItem(`kneeboard_status_${item}`, statusState[item]);
+            updateStatusButton(item);
         }
 
         function initFormRows() {
@@ -730,6 +778,7 @@ document.addEventListener('touchend', function (event) {
 
         window.addEventListener('DOMContentLoaded', () => {
             initFormRows();
+            initStatusBar();
             switchSection('crew');
             initDSTUI();
             
